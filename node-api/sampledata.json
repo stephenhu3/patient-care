@@ -1,0 +1,46 @@
+
+// Sample Patient
+{
+	"first_name": "John",
+	"last_name": "Doe",
+	"phone": "604-555-5555",
+	"age": 73,
+	"caretaker_assigned": "563d9efadda277ba16000001",
+	"prescription_assigned": ["563da3ce81ad2ad816000001", "563da3d881ad2ad816000002"]
+}
+
+// Sample Caretaker
+{
+	"first_name": "Jane",
+	"last_name": "Smith",
+	"phone": "604-555-2550",
+	"email": "smithmd@patientcare.com",
+	"patient_assigned": "563d9cbd9272379c16000006"
+}
+
+// Sample medications
+[
+	{
+	    "name": "Celebrex",
+	    "active_ingredient": "celecoxib"
+	},
+	{
+	    "name": "Flomax",
+	    "active_ingredient": "tamsulosin"
+	}
+]
+
+
+// Sample prescriptions
+[
+	{
+		"medication_assigned": "563da1144d41cec816000001",
+	    "instructions": "Take 1 tablet 2 times a day everyday.",
+	    "alerts": [9, 18]
+	},
+	{
+	 	"medication_assigned": "563da11b4d41cec816000002",
+	    "instructions": "Take 2 tablets with breakfast and 1 tablet with dinner everyday",
+	    "alerts": [8, 20]
+	}
+]

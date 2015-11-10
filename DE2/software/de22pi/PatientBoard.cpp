@@ -15,7 +15,8 @@
  */
 
 #include <stdio.h>
-#include "de22pi.h"
+#include <unistd.h>
+#include "PatientBoard.h"
 // #include sys.h
 
 // ISR to check if the most recently written character is null (end string)

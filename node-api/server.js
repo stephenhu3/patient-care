@@ -17,7 +17,7 @@ var DBUSER = "";
 var DBPASS = "";
 
 var mongoose = require('mongoose');
-var mongodbUri = 'mongodb://' + DBUSER + ':' + DBPASS + '@ds049854.mongolab.com:49854/patient-care';
+var mongodbUri = 'mongodb://' + DBUSER + ':' + DBPASS + '@ds051524.mongolab.com:51524/group9';
 var mongooseUri = uriUtil.formatMongoose(mongodbUri);
 var mongooseLocalUri = 'mongodb://localhost/node_api'; // connect to local db
 

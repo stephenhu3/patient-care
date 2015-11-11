@@ -13,8 +13,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 // Fill in credentials
-var DBUSER = ENV['MONGOLAB_USER'];
-var DBPASS = ENV['MONGOLAB_PASS'];
+var DBUSER = process.env.MONGOLAB_USER;
+var DBPASS = process.env.MONGOLAB_PASS;
 
 var mongoose = require('mongoose');
 // connect to hosted mongolab db

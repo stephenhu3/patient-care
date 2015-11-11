@@ -13,15 +13,16 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 // Fill in credentials
-var DBUSER = "";
-var DBPASS = "";
+var DBUSER = ENV['MONGOLAB_USER'];
+var DBPASS = ENV['MONGOLAB_PASS'];
 
 var mongoose = require('mongoose');
+// connect to hosted mongolab db
 var mongodbUri = 'mongodb://' + DBUSER + ':' + DBPASS + '@ds051524.mongolab.com:51524/group9';
 var mongooseUri = uriUtil.formatMongoose(mongodbUri);
 var mongooseLocalUri = 'mongodb://localhost/node_api'; // connect to local db
 
-mongoose.connect(mongooseLocalUri, function (error) {
+mongoose.connect(mongooseUri, function (error) {
     if (error) {
         console.log('Failed to connect to server:\n' + error);
     }

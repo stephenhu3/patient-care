@@ -5,6 +5,7 @@ import urllib
 import urllib2
 import json
 import time
+from prescription import PiPrescription
 
 class PiRestClient(object):
     def __init__(self, server='http://localhost:8080/api', reqs_per_sec=15):
@@ -60,9 +61,14 @@ class PiRestClient(object):
             '/patients/{0}'.format(patient_id)
         )
 
-        return patient['prescription_assigned']
+        if patient:
+            return patient['prescription_assigned']
 
-    def get_prescriptions(prescription_ids):
+        return None
+
+
+
+    def get_prescriptions(self, prescription_ids):
         prescription_list = []
 
         for prescription_id in prescription_ids:
@@ -76,14 +82,31 @@ class PiRestClient(object):
         return prescription_list
 
 
+    def get_medication_name(self, medication_id):
+        medication = self.perform_rest_action(
+            '/medications/{0}'.format(medication_id)
+        )
+
+        return medication['name']
+
+
 def run(patient_id):
     client = PiRestClient()
     prescription_ids = client.get_prescription_ids(patient_id)
-    if prescription_ids:
-        for pid in prescription_ids:
-            print pid
+    prescriptions = client.get_prescriptions(prescription_ids)
+
+    pi_prescriptions = []
+
+    if prescriptions:
+        for prescription in prescriptions:
+            alerts = prescription['alerts']
+            medication_name = client.get_medication_name(prescription['medication_assigned'])
+            instructions = prescription['instructions']
+            pi_prescription = PiPrescription(alerts, medication_name, instructions)
+            print pi_prescription.medication_name + ": " + pi_prescription.instructions + " AT " + str(pi_prescription.alerts[0])
+
 
 if __name__ == '__main__':
-    patient_id = "56427f49b3b21e9322000001"
+    patient_id = "564396e4ef456e5202000001"
 
     run(patient_id)

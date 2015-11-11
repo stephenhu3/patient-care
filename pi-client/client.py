@@ -5,7 +5,10 @@ import urllib
 import urllib2
 import json
 import time
+import datetime
 from prescription import PiPrescription
+
+TEN_MINUTES = 600
 
 class PiRestClient(object):
     def __init__(self, server='http://localhost:8080/api', reqs_per_sec=15):
@@ -90,20 +93,56 @@ class PiRestClient(object):
         return medication['name']
 
 
+    def get_pi_prescriptions(self, patient_id):
+        prescription_ids = self.get_prescription_ids(patient_id)
+        prescriptions = self.get_prescriptions(prescription_ids)
+
+        pi_prescriptions = []
+
+        if prescriptions:
+            for prescription in prescriptions:
+                alerts = prescription['alerts']
+                medication_name = self.get_medication_name(prescription['medication_assigned'])
+                instructions = prescription['instructions']
+                pi_prescription = PiPrescription(alerts, medication_name, instructions)
+                # print pi_prescription.medication_name + ": " + pi_prescription.instructions + " AT " + str(pi_prescription.alerts[0])
+                pi_prescriptions.append(pi_prescription)
+
+        return pi_prescriptions
+
 def run(patient_id):
     client = PiRestClient()
-    prescription_ids = client.get_prescription_ids(patient_id)
-    prescriptions = client.get_prescriptions(prescription_ids)
+    start = time.time()
+    pi_prescriptions = client.get_pi_prescriptions(patient_id)
+    
+    while 1:
+        current_time = datetime.datetime.now()
 
-    pi_prescriptions = []
+        # Actually minute for testing sake
+        hour = current_time.minute % 10
 
-    if prescriptions:
-        for prescription in prescriptions:
-            alerts = prescription['alerts']
-            medication_name = client.get_medication_name(prescription['medication_assigned'])
-            instructions = prescription['instructions']
-            pi_prescription = PiPrescription(alerts, medication_name, instructions)
-            print pi_prescription.medication_name + ": " + pi_prescription.instructions + " AT " + str(pi_prescription.alerts[0])
+        # Refresh prescriptions
+        if time.time() - start >= TEN_MINUTES and hour == 0:
+            pi_prescriptions = client.get_pi_prescriptions(patient_id)
+            start = time.time()
+
+        # Check the alert times
+        for pi_prescription in pi_prescriptions:
+            alert_index = 0
+            while alert_index < len(pi_prescription.alerts):
+                # Alert is triggered, do something
+                if pi_prescription.triggered[alert_index] == 0 and hour == pi_prescription.alerts[alert_index]:
+                    print str(hour)
+                    print pi_prescription.medication_name + ': ' + pi_prescription.instructions
+                    pi_prescription.triggered[alert_index] = 1
+
+                if pi_prescription.triggered[alert_index] == 1 and hour == 0:
+                    print "hiii"
+                    pi_prescription.triggered[alert_index] = 0;
+
+                alert_index += 1
+
+
 
 
 if __name__ == '__main__':

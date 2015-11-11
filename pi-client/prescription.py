@@ -12,3 +12,4 @@ class PiPrescription(object):
 		self.alerts = alerts
 		self.medication_name = medication_name
 		self.instructions = instructions
+		self.triggered = [0] * len(alerts)

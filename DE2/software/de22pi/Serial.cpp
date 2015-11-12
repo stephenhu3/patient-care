@@ -23,11 +23,6 @@ Serial::~Serial() {
 	// TODO Auto-generated destructor stub
 }
 
-int write(char * message) {
-	// TODO: implement
-	return write(message, strlen(message));
-}
-
 int write(char * message, size_t len) {
 	// TODO: implement
 	// check that there's space in the FIFO
@@ -35,4 +30,8 @@ int write(char * message, size_t len) {
 	return -1;
 }
 
+int write(char * message) {
+	// TODO: implement
+	return write(message, strlen(message));
+}
 

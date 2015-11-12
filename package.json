@@ -1,10 +1,33 @@
 {
-    "name": "node-api",
-    "main": "server.js",
-    "dependencies": {
-        "express": "~4.0.0",
-        "mongoose": "~4.2.5",
-        "body-parser": "~1.0.1",
-        "mongodb-uri": "~0.9.x"
-    }
+  "name": "react-tutorial",
+  "version": "0.0.0",
+  "description": "Code from the React tutorial.",
+  "main": "server.js",
+  "dependencies": {
+    "body-parser": "^1.4.3",
+    "express": "^4.4.5"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reactjs/react-tutorial.git"
+  },
+  "keywords": [
+    "react",
+    "tutorial",
+    "comment",
+    "example"
+  ],
+  "author": "petehunt",
+  "bugs": {
+    "url": "https://github.com/reactjs/react-tutorial/issues"
+  },
+  "homepage": "https://github.com/reactjs/react-tutorial",
+  "engines" : {
+    "node" : "0.12.x"
+  }
 }

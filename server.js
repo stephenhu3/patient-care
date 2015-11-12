@@ -22,7 +22,7 @@ var mongodbUri = 'mongodb://' + DBUSER + ':' + DBPASS + '@ds051524.mongolab.com:
 var mongooseUri = uriUtil.formatMongoose(mongodbUri);
 var mongooseLocalUri = 'mongodb://localhost/node_api'; // connect to local db
 
-mongoose.connect(mongooseUri, function (error) {
+mongoose.connect(mongooseLocalUri, function (error) {
     if (error) {
         console.log('Failed to connect to server:\n' + error);
     }
@@ -63,6 +63,7 @@ router.route('/patients')
         patient.last_name = req.body.last_name;
         patient.phone = req.body.phone;
         patient.age = req.body.age;
+        patient.medication_taken = req.body.medication_taken;
         patient.caretaker_assigned = req.body.caretaker_assigned;
         patient.prescription_assigned = req.body.prescription_assigned;
 
@@ -101,12 +102,15 @@ router.route('/patients/:patient_id')
         Patient.findById(req.params.patient_id, function(err, patient) {
             if (err)
                 res.send(err);
-		    patient.first_name = req.body.first_name;  // set the patients first name (comes from the request)
-		    patient.last_name = req.body.last_name;
-		    patient.phone = req.body.phone;
-		    patient.age = req.body.age;
-		    patient.caretaker_assigned = req.body.caretaker_assigned;
-		    patient.prescription_assigned = req.body.prescription_assigned;
+          
+            // set attributes if they're defined in the PUT request
+            patient.first_name = req.body.first_name ? req.body.first_name : patient.first_name;
+            patient.last_name = req.body.last_name ? req.body.last_name : patient.last_name;
+            patient.phone = req.body.phone ? req.body.phone : patient.phone;
+            patient.age = req.body.age ? req.body.age : patient.age;
+            patient.medication_taken = req.body.medication_taken ? req.body.medication_taken : patient.medication_taken;
+            patient.caretaker_assigned = req.body.caretaker_assigned ? req.body.caretaker_assigned : patient.caretaker_assigned;
+            patient.prescription_assigned = req.body.prescription_assigned ? req.body.prescription_assigned : patient.prescription_assigned;
 
             // save the patient
             patient.save(function(err) {
@@ -177,11 +181,13 @@ router.route('/caretakers/:caretaker_id')
         Caretaker.findById(req.params.caretaker_id, function(err, caretaker) {
             if (err)
                 res.send(err);
-		    caretaker.first_name = req.body.first_name;
-		    caretaker.last_name = req.body.last_name;
-		    caretaker.phone = req.body.phone;
-		    caretaker.email = req.body.email;
-		    caretaker.patient_assigned = req.body.patient_assigned;
+
+            // set attributes if they're defined in the POST request
+		    caretaker.first_name = req.body.first_name ? req.body.first_name : caretaker.first_name;
+		    caretaker.last_name = req.body.last_name ? req.body.last_name : caretaker.last_name;
+		    caretaker.phone = req.body.phone ? req.body.phone : caretaker.phone;
+		    caretaker.email = req.body.email ? req.body.email : caretaker.email;
+		    caretaker.patient_assigned = req.body.patient_assigned ? req.body.patient_assigned : caretaker.patient_assigned;
 
             // save the caretaker
             caretaker.save(function(err) {
@@ -250,9 +256,11 @@ router.route('/prescriptions/:prescription_id')
         Prescription.findById(req.params.prescription_id, function(err, prescription) {
             if (err)
                 res.send(err);
-		    prescription.medication_assigned = req.body.medication_assigned;  // set the prescriptions first name (comes from the request)
-	        prescription.instructions = req.body.instructions;
-	        prescription.alerts = req.body.alerts;
+
+            // set attributes if they're defined in the PUT request
+		    prescription.medication_assigned = req.body.medication_assigned ? req.body.medication_assigned : prescription.medication_assigned;
+	        prescription.instructions = req.body.instructions ? req.body.instructions : prescription.instructions;
+	        prescription.alerts = req.body.alerts ? req.body.alerts : prescription.alerts;
 
             // save the prescription
             prescription.save(function(err) {
@@ -320,8 +328,10 @@ router.route('/medications/:medication_id')
         Medication.findById(req.params.medication_id, function(err, medication) {
             if (err)
                 res.send(err);
-		    medication.name = req.body.name;
-		    medication.active_ingredient = req.body.active_ingredient;
+
+            // set attributes if they're defined in the PUT request
+		    medication.name = req.body.name ? req.body.name : medication.name;
+		    medication.active_ingredient = req.body.active_ingredient ? req.body.active_ingredient : medication.active_ingredient;
 
             // save the medication
             medication.save(function(err) {

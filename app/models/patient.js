@@ -7,6 +7,7 @@ var PatientSchema = new Schema({
     last_name: String,
     phone: String,
     age: Number,
+    medication_taken: Boolean,
     // assigned to only one caretaker's object id
     caretaker_assigned: String,
     // store object id of prescriptions

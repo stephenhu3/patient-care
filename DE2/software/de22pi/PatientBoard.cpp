@@ -17,7 +17,12 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "PatientBoard.h"
+#include "system.h"
+#include "sys/alt_irq.h"
+#include "Serial.h"
 // #include sys.h
+
+Serial serial_pi;
 
 // ISR to check if the most recently written character is null (end string)
 void check_write_ISR()
@@ -47,9 +52,11 @@ void write_message()
 void set_pins()
 {
 	// TODO: implement
+
 }
 
-
+void process_Serial(void * context, alt_u32 id){
+}
 
 int main()
 {
@@ -57,5 +64,6 @@ int main()
 	// when display needs to be updated, do so (see string that's sent)
 	// use timer to figure out how long we'll turn off the alarm
 	//
-  return 0;
+	alt_irq_register( (alt_u32)UART_0_IRQ, NULL, process_Serial );
+	return 0;
 }

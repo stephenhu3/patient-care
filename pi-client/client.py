@@ -11,7 +11,7 @@ from prescription import PiPrescription
 TEN_MINUTES = 600
 
 class PiRestClient(object):
-    def __init__(self, server='http://localhost:8080/api', reqs_per_sec=15):
+    def __init__(self, server='http://patient-care-rest.herokuapp.com/api', reqs_per_sec=15):
         self.server = server
         self.reqs_per_sec = reqs_per_sec
         self.req_count = 0
@@ -137,7 +137,6 @@ def run(patient_id):
                     pi_prescription.triggered[alert_index] = 1
 
                 if pi_prescription.triggered[alert_index] == 1 and hour == 0:
-                    print "hiii"
                     pi_prescription.triggered[alert_index] = 0;
 
                 alert_index += 1
@@ -146,6 +145,6 @@ def run(patient_id):
 
 
 if __name__ == '__main__':
-    patient_id = "564396e4ef456e5202000001"
+    patient_id = "5642bf6b461152af0bfccbfd"
 
     run(patient_id)

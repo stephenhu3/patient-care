@@ -3,8 +3,8 @@
 import RPi.GPIO as GPIO
 import time
 
-PI_WR_EN = 21
-PI_DATA = 20
+PI_WR_EN = 11
+PI_DATA = 9
 
 DE2_WR_EN = 19
 DE2_DATA = 26
@@ -31,7 +31,7 @@ def set_data_high():
 def wait_for_de2():
 	print "Waiting for DE2 write enable"
 
-	while(GPIO.input(DE2_WR_EN) != 0):
+	while(not GPIO.input(DE2_WR_EN):
 		time.sleep(0.1)
 
 	print "DE2 write enable recieved"
@@ -41,7 +41,7 @@ def wait_for_de2():
 
 	print "Waiting for DE2 data"
 
-	while(GPIO.input(DE2_DATA) != 0):
+	while(not GPIO.input(DE2_DATA)):
 		time.sleep(0.1)
 
 	print "DE2 data recieved"

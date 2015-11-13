@@ -46,7 +46,10 @@ def wait_for_de2():
 
 	print "DE2 data recieved"
 
-if __name__ == '__main__':
+def run():
 	initialize_pins()
 	set_data_high()
 	wait_for_de2()
+
+if __name__ == '__main__':
+	run()

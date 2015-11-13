@@ -7,8 +7,11 @@ import json
 import time
 import datetime
 from prescription import PiPrescription
+import requests
 
 TEN_MINUTES = 600
+true = True
+false = False
 
 class PiRestClient(object):
     def __init__(self, server='http://patient-care-rest.herokuapp.com/api', reqs_per_sec=15):
@@ -141,10 +144,32 @@ def run(patient_id):
 
                 alert_index += 1
 
+def run2():
+    client = PiRestClient()
+    start = time.time()
+    flag = True;
+    payload1 = { 'age':'73'}
+    payload2 = { 'medication_taken':'true'}
+
+    while True:
+        if time.time() - start >= 10:
+            start = time.time()
+
+            if flag:
+                requests.put("http://patient-care-rest.herokuapp.com/api/patients/5645227e3fc36e1100149818", data=payload1)
+                print "true"
+                flag = False
+
+            else:
+                requests.put("http://patient-care-rest.herokuapp.com/api/patients/5645227e3fc36e1100149818", data=payload2)
+                print "false"
+                flag = True
 
 
 
 if __name__ == '__main__':
-    patient_id = "5642bf6b461152af0bfccbfd"
+    patient_id = "5645227e3fc36e1100149818"
 
     run(patient_id)
+
+    # run2()

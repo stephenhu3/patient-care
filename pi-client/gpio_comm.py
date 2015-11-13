@@ -6,10 +6,10 @@ import time
 PI_WR_EN = 21
 PI_DATA = 20
 
-DE2_WR_EN = 7 
-DE2_DATA = 8
+DE2_WR_EN = 19
+DE2_DATA = 26
 
-TEST = 2
+TEST = 5
 
 def initialize_pins():
 	GPIO.setmode(GPIO.BCM)

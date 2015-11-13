@@ -15,10 +15,15 @@
     <div id="content"></div>
     <script type="text/babel">
       // tutorial7.js
+      
       var Comment = React.createClass({
         rawMarkup: function() {
           var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
           return { __html: rawMarkup };
+        },
+
+        medTaken: function() {
+          return this.props.medication_taken ? "Taken" : "Not Taken";
         },
 
         render: function() {
@@ -33,6 +38,9 @@
               <h2 className="patientPhone">
                 Phone: {this.props.phone}
               </h2>
+              <h2 className="patientMedicationTaken">
+                Medication Status: {this.medTaken()}
+              </h2>
               <span dangerouslySetInnerHTML={this.rawMarkup()} />
             </div>
           );
@@ -44,7 +52,7 @@
         render: function() {
           var commentNodes = this.props.data.map(function (comment) {
             return (
-              <Comment first_name={comment.first_name} last_name={comment.last_name} age={comment.age} phone={comment.phone}>
+              <Comment first_name={comment.first_name} last_name={comment.last_name} age={comment.age} phone={comment.phone} medication_taken={comment.medication_taken}>
                 Assigned Caretaker: {comment.caretaker_assigned}
                 Assigned Prescriptions: {comment.prescription_assigned}
               </Comment>

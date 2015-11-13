@@ -123,6 +123,6 @@ def webClientRealTimeTest(patient_id):
 if __name__ == '__main__':
     patient_id = "5645227e3fc36e1100149818"
 
-    # run(patient_id)
+    run(patient_id)
 
-    webClientRealTimeTest(patient_id)
+    # webClientRealTimeTest(patient_id)

@@ -20,6 +20,26 @@
       
       // tutorial7.js
       var Comment = React.createClass({
+        getInitialState: function() {
+          return {
+            caretakerFirstName: '',
+            caretakerLastName: '',
+            prescriptions: []
+          };
+        },
+
+        componentDidMount: function() {
+          var caretakerEndpoint = Constants["api_url"] + "/caretakers/" + this.props.caretaker_assigned;
+          $.get(caretakerEndpoint, function(result) {
+            if (this.isMounted()) {
+              this.setState({
+                caretakerFirstName: result.first_name,
+                caretakerLastName: result.last_name
+              });
+            }
+          }.bind(this));
+        },
+
         rawMarkup: function() {
           var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
           return { __html: rawMarkup };
@@ -29,48 +49,11 @@
           return this.props.medication_taken ? "Taken" : "Not Taken";
         },
 
-        requestCaretaker: function(caretaker_id) {
-          console.log(caretaker_id);
-          console.log(Constants["api_url"]);
-          console.log(Constants["api_url"] + "/caretakers/" + caretaker_id);
-          return $.ajax({
-            url: Constants["api_url"] + "/caretakers/" + caretaker_id,
-            dataType: 'json',
-            cache: false,
-            success: function(data) {
-              console.log(data);
-            }.bind(this),
-            error: function(xhr, status, err) {
-              console.error(url, status, err.toString());
-            }.bind(this)
-          });
-        },
-
-
         getPrescription: function() {
           return this.props.medication_taken ? "Taken" : "Not Taken";
         },
 
-        caretakerName: function() {
-          var caretakerName;
-
-          this.requestCaretaker(this.props.caretaker_assigned).done(function(data) {
-            caretakerName = data.first_name;
-          });
-
-          return caretakerName;
-        },     
-
         render: function() {
-          // var caretakerName;
-          // this.requestCaretaker(this.props.caretaker_assigned).done(function(data) {
-          //   console.log("done now");
-          //   console.log(data);
-          //   console.log("that was the data");
-          //   console.log(data.first_name);
-          //   caretakerName = data.first_name;
-          // });
-          // console.log("caretaker name " + caretakerName);
           return (
             <div className="comment">
               <h2 className="patientName">
@@ -86,7 +69,7 @@
                 Medication Status: {this.medTaken()}
               </h2>
               <h2 className="patientCaretakerAssigned">
-                Assigned Caretaker: {this.caretakerName()}
+                Assigned Caretaker: {this.state.caretakerFirstName} {this.state.caretakerLastName}
               </h2>
               <span dangerouslySetInnerHTML={this.rawMarkup()} />
             </div>
@@ -100,7 +83,6 @@
           var commentNodes = this.props.data.map(function (comment) {
             return (
               <Comment first_name={comment.first_name} last_name={comment.last_name} age={comment.age} phone={comment.phone} medication_taken={comment.medication_taken} caretaker_assigned={comment.caretaker_assigned}>
-                Assigned Caretaker: {comment.caretaker_assigned}
                 Assigned Prescriptions: {comment.prescription_assigned}
               </Comment>
             );

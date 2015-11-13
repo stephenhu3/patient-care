@@ -12,7 +12,6 @@ DE2_DATA = 26
 TEST = 5
 
 def initialize_pins():
-	GPIO.cleanup()
 	GPIO.setmode(GPIO.BCM)
 
 	GPIO.setup(PI_WR_EN, GPIO.OUT)
@@ -51,6 +50,7 @@ def run():
 	initialize_pins()
 	set_data_high()
 	wait_for_de2()
+	GPIO.cleanup()
 
 if __name__ == '__main__':
 	run()

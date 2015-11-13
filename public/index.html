@@ -14,8 +14,11 @@
   <body>
     <div id="content"></div>
     <script type="text/babel">
-      // tutorial7.js
+      var Constants = {
+        api_url: "http://patient-care-rest.herokuapp.com/api"
+      }
       
+      // tutorial7.js
       var Comment = React.createClass({
         rawMarkup: function() {
           var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
@@ -26,7 +29,48 @@
           return this.props.medication_taken ? "Taken" : "Not Taken";
         },
 
+        requestCaretaker: function(caretaker_id) {
+          console.log(caretaker_id);
+          console.log(Constants["api_url"]);
+          console.log(Constants["api_url"] + "/caretakers/" + caretaker_id);
+          return $.ajax({
+            url: Constants["api_url"] + "/caretakers/" + caretaker_id,
+            dataType: 'json',
+            cache: false,
+            success: function(data) {
+              console.log(data);
+            }.bind(this),
+            error: function(xhr, status, err) {
+              console.error(url, status, err.toString());
+            }.bind(this)
+          });
+        },
+
+
+        getPrescription: function() {
+          return this.props.medication_taken ? "Taken" : "Not Taken";
+        },
+
+        caretakerName: function() {
+          var caretakerName;
+
+          this.requestCaretaker(this.props.caretaker_assigned).done(function(data) {
+            caretakerName = data.first_name;
+          });
+
+          return caretakerName;
+        },     
+
         render: function() {
+          // var caretakerName;
+          // this.requestCaretaker(this.props.caretaker_assigned).done(function(data) {
+          //   console.log("done now");
+          //   console.log(data);
+          //   console.log("that was the data");
+          //   console.log(data.first_name);
+          //   caretakerName = data.first_name;
+          // });
+          // console.log("caretaker name " + caretakerName);
           return (
             <div className="comment">
               <h2 className="patientName">
@@ -41,6 +85,9 @@
               <h2 className="patientMedicationTaken">
                 Medication Status: {this.medTaken()}
               </h2>
+              <h2 className="patientCaretakerAssigned">
+                Assigned Caretaker: {this.caretakerName()}
+              </h2>
               <span dangerouslySetInnerHTML={this.rawMarkup()} />
             </div>
           );
@@ -52,7 +99,7 @@
         render: function() {
           var commentNodes = this.props.data.map(function (comment) {
             return (
-              <Comment first_name={comment.first_name} last_name={comment.last_name} age={comment.age} phone={comment.phone} medication_taken={comment.medication_taken}>
+              <Comment first_name={comment.first_name} last_name={comment.last_name} age={comment.age} phone={comment.phone} medication_taken={comment.medication_taken} caretaker_assigned={comment.caretaker_assigned}>
                 Assigned Caretaker: {comment.caretaker_assigned}
                 Assigned Prescriptions: {comment.prescription_assigned}
               </Comment>
@@ -75,7 +122,7 @@
           if (!text || !author) {
             return;
           }
-          this.props.onCommentSubmit({first_name: first_name, last_name: last_name});
+          this.props.onCommentSubmit({first_name: first_name, last_name: last_name, age: age});
           this.refs.first_name.value = '';
           this.refs.last_name.value = '';
           return;
@@ -83,8 +130,9 @@
         render: function() {
           return (
             <form className="commentForm" onSubmit={this.handleSubmit}>
-              <input type="text" placeholder="Your name" ref="author" />
-              <input type="text" placeholder="Say something..." ref="text" />
+              <input type="text" placeholder="Patient First Name" ref="first_name" />
+              <input type="text" placeholder="Patient Last Name" ref="last_name" />
+              <input type="text" placeholder="Patient Age" ref="age" />
               <input type="submit" value="Post" />
             </form>
           );
@@ -95,14 +143,14 @@
       var CommentBox = React.createClass({
         loadCommentsFromServer: function() {
           $.ajax({
-            url: this.props.url,
+            url: this.props.api_url + "/patients",
             dataType: 'json',
             cache: false,
             success: function(data) {
               this.setState({data: data});
             }.bind(this),
             error: function(xhr, status, err) {
-              console.error(this.props.url, status, err.toString());
+              console.error(url, status, err.toString());
             }.bind(this)
           });
         },
@@ -111,7 +159,7 @@
           var newComments = comments.concat([comment]);
           this.setState({data: newComments});
           $.ajax({
-            url: this.props.url,
+            url: this.props.api_url + "/patients",
             dataType: 'json',
             type: 'POST',
             data: comment,
@@ -119,7 +167,7 @@
               this.setState({data: data});
             }.bind(this),
             error: function(xhr, status, err) {
-              console.error(this.props.url, status, err.toString());
+              console.error(url, status, err.toString());
             }.bind(this)
           });
         },
@@ -134,7 +182,7 @@
           return (
             <div className="commentBox">
               <h1>Patients</h1>
-              <CommentList data={this.state.data} />
+              <CommentList data={this.state.data}/>
               <CommentForm onCommentSubmit={this.handleCommentSubmit} />
             </div>
           );
@@ -142,7 +190,7 @@
       });
 
       ReactDOM.render(
-        <CommentBox url="http://patient-care-rest.herokuapp.com/api/patients" pollInterval={2000} />,
+        <CommentBox api_url="http://patient-care-rest.herokuapp.com/api/" pollInterval={2000} />,
         document.getElementById('content')
       );
 

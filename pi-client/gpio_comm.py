@@ -30,7 +30,7 @@ def set_data_high():
 def wait_for_de2():
 	print "Waiting for DE2 write enable"
 
-	while(!GPIO.input(DE2_WR_EN)):
+	while(GPIO.input(DE2_WR_EN) != 1):
 
 	print "DE2 write enable recieved"
 
@@ -39,7 +39,7 @@ def wait_for_de2():
 
 	print "Waiting for DE2 data"
 
-	while(!GPIO.input(DE2_DATA))
+	while(!GPIO.input(DE2_DATA) != 1):
 
 	print "DE2 data recieved"
 

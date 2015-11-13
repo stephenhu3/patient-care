@@ -7,7 +7,7 @@ import json
 import time
 import datetime
 from prescription import PiPrescription
-# import gpio_comm
+import gpio_comm
 import requests
 
 TEN_MINUTES = 600
@@ -89,7 +89,8 @@ def run(patient_id):
                     print str(hour)
                     print pi_prescription.medication_name + ': ' + pi_prescription.instructions
                     pi_prescription.triggered[alert_index] = 1
-                    requests.put(self.server, data=payload1)
+                    gpio_comm.run()
+                    requests.put(client.server + '/patients/{0}'.format(patient_id), data={'medication_taken':'true'})
 
                 if pi_prescription.triggered[alert_index] == 1 and hour == 0:
                     pi_prescription.triggered[alert_index] = 0;

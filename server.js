@@ -33,6 +33,8 @@ var Patient = require('./app/models/patient');
 var Caretaker = require('./app/models/caretaker');
 var Prescription = require('./app/models/prescription');
 var Medication = require('./app/models/medication');
+var Alert = require('./app/models/alert');
+var PatientHistory = require('./app/models/patientHistory');
 
 var port = process.env.PORT || 8080; // set our port
 
@@ -63,7 +65,7 @@ router.route('/patients')
         patient.last_name = req.body.last_name;
         patient.phone = req.body.phone;
         patient.age = req.body.age;
-        patient.medication_taken = req.body.medication_taken;
+        patient.alert_taken = req.body.alert_taken;
         patient.caretaker_assigned = req.body.caretaker_assigned;
         patient.prescription_assigned = req.body.prescription_assigned;
 
@@ -108,7 +110,7 @@ router.route('/patients/:patient_id')
             patient.last_name = req.body.last_name ? req.body.last_name : patient.last_name;
             patient.phone = req.body.phone ? req.body.phone : patient.phone;
             patient.age = req.body.age ? req.body.age : patient.age;
-            patient.medication_taken = req.body.medication_taken ? req.body.medication_taken : patient.medication_taken;
+            patient.alert_taken = req.body.alert_taken ? req.body.alert_taken : patient.alert_taken;
             patient.caretaker_assigned = req.body.caretaker_assigned ? req.body.caretaker_assigned : patient.caretaker_assigned;
             patient.prescription_assigned = req.body.prescription_assigned ? req.body.prescription_assigned : patient.prescription_assigned;
 
@@ -217,9 +219,9 @@ router.route('/prescriptions')
     // create a prescription (accessed at POST http://localhost:8080/api/prescriptions)
     .post(function(req, res) {
         var prescription = new Prescription();      // create a new instance of the Prescription model
-        prescription.medication_assigned = req.body.medication_assigned;
+        prescription.alert_assigned = req.body.alert_assigned;
         prescription.instructions = req.body.instructions;
-        prescription.alerts = req.body.alerts;
+        prescription.alert_assigned = req.body.alert_assigned;
 
         // save the prescription and check for errors
         prescription.save(function(err) {
@@ -258,9 +260,9 @@ router.route('/prescriptions/:prescription_id')
                 res.send(err);
 
             // set attributes if they're defined in the PUT request
-		    prescription.medication_assigned = req.body.medication_assigned ? req.body.medication_assigned : prescription.medication_assigned;
+		    prescription.alert_assigned = req.body.alert_assigned ? req.body.alert_assigned : prescription.alert_assigned;
 	        prescription.instructions = req.body.instructions ? req.body.instructions : prescription.instructions;
-	        prescription.alerts = req.body.alerts ? req.body.alerts : prescription.alerts;
+	        prescription.alert_assigned = req.body.alert_assigned ? req.body.alert_assigned : prescription.alert_assigned;
 
             // save the prescription
             prescription.save(function(err) {
@@ -351,6 +353,154 @@ router.route('/medications/:medication_id')
             if (err)
                 res.send(err);
             res.json({ message: 'Medication successfully deleted' });
+        });
+    });
+
+// on routes that end in /alerts
+// ----------------------------------------------------
+router.route('/alerts')
+
+    // create a alert (accessed at POST http://localhost:8080/api/alerts)
+    .post(function(req, res) {
+        var alert = new Alert();      // create a new instance of the Alert model
+        alert.hour = req.body.hour;
+        alert.timeout = req.body.timeout;
+        alert.schedule = req.body.schedule;
+        alert.prescription_assigned = req.body.prescription_assigned;
+
+        // save the alert and check for errors
+        alert.save(function(err) {
+            if (err)
+                res.send(err);
+            res.json({ message: 'Alert successfully created' });
+        });
+        
+    })
+
+    // get all the alerts (accessed at GET http://localhost:8080/api/alerts)
+    .get(function(req, res) {
+        Alert.find(function(err, alerts) {
+            if (err)
+                res.send(err);
+            res.json(alerts);
+        });
+    });
+
+router.route('/alerts/:alert_id')
+
+    // get the alert with that id (accessed at GET http://localhost:8080/api/alerts/:alert_id)
+    .get(function(req, res) {
+        Alert.findById(req.params.alert_id, function(err, alert) {
+            if (err)
+                res.send(err);
+            res.json(alert);
+        });
+    })
+
+    // update the alert with this id (accessed at PUT http://localhost:8080/api/alerts/:alert_id)
+    .put(function(req, res) {
+        // use our alert model to find the alert we want
+        Alert.findById(req.params.alert_id, function(err, alert) {
+            if (err)
+                res.send(err);
+
+            // set attributes if they're defined in the PUT request
+            alert.hour = req.body.hour ? req.body.hour : alert.hour;
+            alert.timeout = req.body.timeout ? req.body.timeout : alert.timeout;
+            alert.schedule = req.body.schedule ? req.body.schedule : alert.schedule;
+            alert.prescription_assigned = req.body.prescription_assigned ? req.body.prescription_assigned : alert.prescription_assigned;
+
+            // save the alert
+            alert.save(function(err) {
+                if (err)
+                    res.send(err);
+                res.json({ message: 'Alert successfully updated' });
+            });
+
+        });
+    })
+
+    // delete the alert with this id (accessed at DELETE http://localhost:8080/api/alerts/:alert_id)
+    .delete(function(req, res) {
+        Alert.remove({
+            _id: req.params.alert_id
+        }, function(err, alert) {
+            if (err)
+                res.send(err);
+            res.json({ message: 'Alert successfully deleted' });
+        });
+    });
+
+// on routes that end in /patientHistory
+// ----------------------------------------------------
+router.route('/patienthistory')
+
+    // create a patientHistory (accessed at POST http://localhost:8080/api/patientHistorys)
+    .post(function(req, res) {
+        var patientHistory = new PatientHistory();      // create a new instance of the PatientHistory model
+        patientHistory.taken = req.body.taken;
+        patientHistory.patient_assigned = req.body.patient_assigned;
+        patientHistory.alert_assigned = req.body.alert_assigned;
+
+        // save the patientHistory and check for errors
+        patientHistory.save(function(err) {
+            if (err)
+                res.send(err);
+            res.json({ message: 'PatientHistory successfully created' });
+        });
+        
+    })
+
+    // get all the patientHistorys (accessed at GET http://localhost:8080/api/patientHistorys)
+    .get(function(req, res) {
+        PatientHistory.find(function(err, patientHistorys) {
+            if (err)
+                res.send(err);
+            res.json(patientHistorys);
+        });
+    });
+
+router.route('/patienthistory/:patienthistory_id')
+
+    // get the patientHistory with that id (accessed at GET http://localhost:8080/api/patientHistorys/:patientHistory_id)
+    .get(function(req, res) {
+        PatientHistory.findById(req.params.patientHistory_id, function(err, patientHistory) {
+            if (err)
+                res.send(err);
+            res.json(patientHistory);
+        });
+    })
+
+    // update the patientHistory with this id (accessed at PUT http://localhost:8080/api/patientHistorys/:patientHistory_id)
+    .put(function(req, res) {
+        // use our patientHistory model to find the patientHistory we want
+        PatientHistory.findById(req.params.patientHistory_id, function(err, patientHistory) {
+            if (err)
+                res.send(err);
+
+            // set attributes if they're defined in the PUT request
+            patientHistory.taken = req.body.taken ? req.body.taken : patientHistory.taken;
+            patientHistory.patient_assigned = req.body.patient_assigned ? req.body.patient_assigned : patientHistory.patient_assigned;
+            patientHistory.alert_assigned = req.body.alert_assigned ? req.body.alert_assigned : patientHistory.alert_assigned;
+
+            // save the patientHistory
+            patientHistory.save(function(err) {
+                if (err)
+                    res.send(err);
+                res.json({ message: 'PatientHistory successfully updated' });
+            });
+
+        });
+    })
+
+    // delete the patientHistory with this id (accessed at DELETE http://localhost:8080/api/patientHistorys/:patientHistory_id)
+    .delete(function(req, res) {
+        PatientHistory.remove({
+            _id: req.params.patientHistory_id
+        }, function(err, patientHistory) {
+            if (err)
+                res.send(err);
+            res.json({ message: 'PatientHistory successfully deleted' });
         });
     });
 

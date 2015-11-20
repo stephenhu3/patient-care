@@ -441,6 +441,7 @@ router.route('/patienthistory')
         patientHistory.taken = req.body.taken;
         patientHistory.patient_assigned = req.body.patient_assigned;
         patientHistory.alert_assigned = req.body.alert_assigned;
+        patientHistory.date = req.body.date;
 
         // save the patientHistory and check for errors
         patientHistory.save(function(err) {
@@ -482,6 +483,7 @@ router.route('/patienthistory/:patienthistory_id')
             patientHistory.taken = req.body.taken ? req.body.taken : patientHistory.taken;
             patientHistory.patient_assigned = req.body.patient_assigned ? req.body.patient_assigned : patientHistory.patient_assigned;
             patientHistory.alert_assigned = req.body.alert_assigned ? req.body.alert_assigned : patientHistory.alert_assigned;
+            patientHistory.date = req.body.date ? req.body.date : patientHistory.date;
 
             // save the patientHistory
             patientHistory.save(function(err) {

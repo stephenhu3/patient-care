@@ -2,16 +2,43 @@ import serial
 import time
 
 class PiSerialComm(object):
-    def __init__(self, port=serial.Serial("/dev/ttyAMA0", baudrate = 7200, timeout = 2)):
+    def __init__(self, port=serial.Serial(
+    						"/dev/ttyUSB0",
+    						baudrate=57600,
+    						parity=serial.PARITY_NONE,
+    						stopbits=serial.STOPBITS_ONE,
+    						bytesize=serial.EIGHTBITS,
+    						writeTimeout = 0,
+    						timeout = 10,
+    						rtscts=False,
+    						dsrdtr=False,
+    						xonxoff=False)):
         self.port = port
 
-def readline(self):
-    rv = ""
-    while True:
-    ch = self.port.read()
-    rv += ch
-    if ch == '\r' or ch == '':
-    	return rv
+	def readline(self):
+		out = ''
 
-def writeline(self, line):
-	self.port.write(line)
+	    while self.port.inWaiting() > 0:
+            out += ser.read(1)
+
+        return out
+
+
+	def writeline(self, line):
+		if(self.port.writeable()):
+			self.port.write(line)
+			return True
+
+		return False
+
+if __name__ == '__main__':
+	newPort = PiSerialComm()
+
+	newPort.writeline("Hello DE2, this is the Pi. How are you?")
+
+	time.sleep(1)
+
+	message = newPort.readline()
+
+	print message
+

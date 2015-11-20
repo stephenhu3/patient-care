@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>React Tutorial</title>
+    <title>Patient Care Monitoring System</title>
     <!-- Not present in the tutorial. Just for basic styling. -->
     <link rel="stylesheet" href="css/base.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.0/react.js"></script>
@@ -19,7 +19,7 @@
       }
       
       // tutorial7.js
-      var Comment = React.createClass({
+      var Patient = React.createClass({
         getInitialState: function() {
           return {
             caretakerFirstName: '',
@@ -55,7 +55,7 @@
 
         render: function() {
           return (
-            <div className="comment">
+            <div className="patient">
               <h2 className="patientName">
                 Name: {this.props.first_name} {this.props.last_name}
               </h2>
@@ -78,25 +78,28 @@
       });
 
       // tutorial10.js
-      var CommentList = React.createClass({
+      var PatientList = React.createClass({
         render: function() {
-          var commentNodes = this.props.data.map(function (comment) {
+          var patientNodes = this.props.data.map(function (patient) {
             return (
-              <Comment first_name={comment.first_name} last_name={comment.last_name} age={comment.age} phone={comment.phone} medication_taken={comment.medication_taken} caretaker_assigned={comment.caretaker_assigned}>
-                Assigned Prescriptions: {comment.prescription_assigned}
-              </Comment>
+              <div>
+                <Patient first_name={patient.first_name} last_name={patient.last_name} age={patient.age} phone={patient.phone} medication_taken={patient.medication_taken} caretaker_assigned={patient.caretaker_assigned}>
+                  Assigned Prescriptions: {patient.prescription_assigned}
+                </Patient>
+                <PrescriptionList data={patient.prescription_assigned}/>
+              </div>
             );
           });
           return (
-            <div className="commentList">
-              {commentNodes}
+            <div className="patientList">
+              {patientNodes}
             </div>
           );
         }
       });
 
       // tutorial18.js
-      var CommentForm = React.createClass({
+      var PatientForm = React.createClass({
         handleSubmit: function(e) {
           e.preventDefault();
           var author = this.refs.author.value.trim();
@@ -104,14 +107,14 @@
           if (!text || !author) {
             return;
           }
-          this.props.onCommentSubmit({first_name: first_name, last_name: last_name, age: age});
+          this.props.onPatientSubmit({first_name: first_name, last_name: last_name, age: age});
           this.refs.first_name.value = '';
           this.refs.last_name.value = '';
           return;
         },
         render: function() {
           return (
-            <form className="commentForm" onSubmit={this.handleSubmit}>
+            <form className="patientForm" onSubmit={this.handleSubmit}>
               <input type="text" placeholder="Patient First Name" ref="first_name" />
               <input type="text" placeholder="Patient Last Name" ref="last_name" />
               <input type="text" placeholder="Patient Age" ref="age" />
@@ -122,8 +125,8 @@
       });
 
       // tutorial20.js
-      var CommentBox = React.createClass({
-        loadCommentsFromServer: function() {
+      var PatientBox = React.createClass({
+        loadPatientsFromServer: function() {
           $.ajax({
             url: this.props.api_url + "/patients",
             dataType: 'json',
@@ -136,15 +139,15 @@
             }.bind(this)
           });
         },
-        handleCommentSubmit: function(comment) {
-          var comments = this.state.data;
-          var newComments = comments.concat([comment]);
-          this.setState({data: newComments});
+        handlePatientSubmit: function(patient) {
+          var patients = this.state.data;
+          var newPatients = patients.concat([patient]);
+          this.setState({data: newPatients});
           $.ajax({
             url: this.props.api_url + "/patients",
             dataType: 'json',
             type: 'POST',
-            data: comment,
+            data: patient,
             success: function(data) {
               this.setState({data: data});
             }.bind(this),
@@ -157,22 +160,122 @@
           return {data: []};
         },
         componentDidMount: function() {
-          this.loadCommentsFromServer();
-          setInterval(this.loadCommentsFromServer, this.props.pollInterval);
+          this.loadPatientsFromServer();
+          setInterval(this.loadPatientsFromServer, this.props.pollInterval);
         },
         render: function() {
           return (
-            <div className="commentBox">
+            <div className="patientBox">
               <h1>Patients</h1>
-              <CommentList data={this.state.data}/>
-              <CommentForm onCommentSubmit={this.handleCommentSubmit} />
+              <PatientList data={this.state.data}/>
+              <PatientForm onPatientSubmit={this.handlePatientSubmit} />
+            </div>
+          );
+        }
+      });
+
+      var Prescription = React.createClass({
+        getInitialState: function() {
+          return {
+            instructions: '',
+            medication_assigned: '',
+            alert_assigned: []
+          };
+        },
+
+        componentDidMount: function() {
+          var prescriptionEndpoint = Constants["api_url"] + "/prescriptions/" + this.props.data;
+          console.log(prescriptionEndpoint);
+          $.get(prescriptionEndpoint, function(result) {
+            if (this.isMounted()) {
+              this.setState({
+                instructions: result.instructions,
+                medication_assigned: result.medication_assigned,
+                alert_assigned: result.alert_assigned
+              });
+            }
+          }.bind(this));
+        },
+
+        rawMarkup: function() {
+          var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
+          return { __html: rawMarkup };
+        },
+
+        render: function() {
+          return (
+            <div>
+              prescription: {this.props.data}
+              instructions: {this.state.instructions}
+              {<Medication data={this.state.medication_assigned} />}
+            </div>
+          );
+        }
+      });
+
+      var PrescriptionList = React.createClass({
+        render: function() {
+          console.log(this.props.data);
+
+        var prescriptionNodes = this.props.data.map(function (prescription) {
+            return (
+              <Prescription data={prescription}>
+              </Prescription>
+            );
+          });
+
+          console.log(prescriptionNodes);
+          return (
+            <div className="prescriptionList">
+              {prescriptionNodes}
+            </div>
+          );
+        }
+      });
+
+      var Medication = React.createClass({
+        getInitialState: function() {
+          return {
+            medicationName: ''
+          };
+        },
+
+        componentDidMount: function() {
+          // TODO: Current issue:
+          // medicationID passed in display in the HTML element, but as a variable it is empty
+          // need to get medicationEndpoint to include the medicationID
+          var medicationID = this.props.data;
+          console.log(this.props.data);
+          console.log("medicationID");
+          console.log(medicationID);
+          var medicationEndpoint = Constants["api_url"] + "/medications/" + medicationID;
+          console.log(medicationEndpoint);
+          $.get(medicationEndpoint, function(result) {
+            if (this.isMounted()) {
+              this.setState({
+                medicationName: result.name
+              });
+            }
+          }.bind(this));
+        },
+
+        rawMarkup: function() {
+          var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
+          return { __html: rawMarkup };
+        },
+
+        render: function() {
+          return (
+            <div>
+              medication: {this.props.data}
+              name: {this.state.medicationName}
             </div>
           );
         }
       });
 
       ReactDOM.render(
-        <CommentBox api_url="http://patient-care-rest.herokuapp.com/api/" pollInterval={2000} />,
+        <PatientBox api_url="http://patient-care-rest.herokuapp.com/api/" pollInterval={2000} />,
         document.getElementById('content')
       );
 

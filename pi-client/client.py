@@ -54,14 +54,26 @@ class PiRestClient(object):
 
         if prescriptions:
             for prescription in prescriptions:
-                alerts = prescription['alerts']
+                alerts_assigned = self.get_alerts(prescription['alert_assigned'])
                 medication_name = self.get_medication_name(prescription['medication_assigned'])
                 instructions = prescription['instructions']
-                pi_prescription = PiPrescription(alerts, medication_name, instructions)
+                pi_prescription = PiPrescription(alerts_assigned, medication_name, instructions)
                 # print pi_prescription.medication_name + ": " + pi_prescription.instructions + " AT " + str(pi_prescription.alerts[0])
                 pi_prescriptions.append(pi_prescription)
 
         return pi_prescriptions
+
+    def get_alerts(self, alert_ids):
+        currentDayString = datetime.date.today().strftime("%A")
+        alerts = []
+
+        for alert_id in alert_ids:
+            alert = requests.get(self.server + '/alert/{0}'.format(alert_id))
+            tempPiAlert = PiAlert(alert["hour"], alert["timeout"], alert["schedule"])
+
+            alerts.append(tempPiAlert)
+
+        return alerts    
 
 
 def run(patient_id):

@@ -140,7 +140,7 @@ int main()
     	printf("We're done boys.\n");
     	fclose (fp);
     }
-    else printf("Can't open shit.\n");
+    else printf("Can't open.\n");
     return 0;
 
 

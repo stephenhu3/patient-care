@@ -271,11 +271,19 @@
          type = "int";
       }
    }
-   element timer_0.s1
+   element LEDs.s1
    {
       datum baseAddress
       {
-         value = "17504";
+         value = "17600";
+         type = "String";
+      }
+   }
+   element onchip_memory2_1.s1
+   {
+      datum baseAddress
+      {
+         value = "6144";
          type = "String";
       }
    }
@@ -287,27 +295,11 @@
          type = "boolean";
       }
    }
-   element onchip_memory2_1.s1
+   element timer_0.s1
    {
       datum baseAddress
       {
-         value = "6144";
-         type = "String";
-      }
-   }
-   element keys.s1
-   {
-      datum baseAddress
-      {
-         value = "17584";
-         type = "String";
-      }
-   }
-   element switches.s1
-   {
-      datum baseAddress
-      {
-         value = "17616";
+         value = "17504";
          type = "String";
       }
    }
@@ -319,11 +311,11 @@
          type = "String";
       }
    }
-   element LEDs.s1
+   element switches.s1
    {
       datum baseAddress
       {
-         value = "17600";
+         value = "17616";
          type = "String";
       }
    }
@@ -332,6 +324,14 @@
       datum baseAddress
       {
          value = "17440";
+         type = "String";
+      }
+   }
+   element keys.s1
+   {
+      datum baseAddress
+      {
+         value = "17584";
          type = "String";
       }
    }
@@ -506,7 +506,7 @@
  <parameter name="projectName" value="de22pi.qpf" />
  <parameter name="sopcBorderPoints" value="false" />
  <parameter name="systemHash" value="1" />
- <parameter name="timeStamp" value="1448044859264" />
+ <parameter name="timeStamp" value="1448476557166" />
  <parameter name="useTestBenchNamingPattern" value="false" />
  <instanceScript></instanceScript>
  <interface name="clk" internal="clk_0.clk_in" type="clock" dir="end" />
@@ -1029,7 +1029,7 @@
    version="13.0.1.99.2"
    enabled="1"
    name="rs232_0_0">
-  <parameter name="baud" value="115200" />
+  <parameter name="baud" value="19200" />
   <parameter name="dataBits" value="8" />
   <parameter name="fixedBaud" value="true" />
   <parameter name="parity" value="NONE" />

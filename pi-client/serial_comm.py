@@ -6,7 +6,7 @@ class PiSerialComm(object):
         self.port = port
 
 	def readline(self):
-		
+
         out = ''
 
         while self.port.inWaiting() > 0:

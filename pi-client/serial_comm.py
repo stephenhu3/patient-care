@@ -6,7 +6,8 @@ class PiSerialComm(object):
         self.port = port
 
 	def readline(self):
-		out = ''
+		
+        out = ''
 
         while self.port.inWaiting() > 0:
             out += ser.read(1)
@@ -19,7 +20,7 @@ class PiSerialComm(object):
 			return True
 
 		return False
-        
+
 
 if __name__ == '__main__':
 	newPort = PiSerialComm()

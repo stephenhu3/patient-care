@@ -10,7 +10,7 @@ class PiSerialComm(object):
 		out = ''
 
 		while self.port.inWaiting() > 0:
-			out += self.read(1)
+			out += self.port.read(1)
 
 		return out
 

@@ -2,17 +2,17 @@ import serial
 import time
 
 class PiSerialComm(object):
-    def __init__(self, port=serial.Serial("/dev/ttyUSB0", baudrate=115200)):
-        self.port = port
+	def __init__(self, port=serial.Serial("/dev/ttyUSB0", baudrate=115200)):
+		self.port = port
 
 	def readline(self):
 
-        out = ''
+		out = ''
 
-        while self.port.inWaiting() > 0:
-            out += ser.read(1)
+		while self.port.inWaiting() > 0:
+			out += ser.read(1)
 
-        return out
+		return out
 
 	def writeline(self, line):
 		if(self.port.writeable()):

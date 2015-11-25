@@ -15,12 +15,7 @@ class PiSerialComm(object):
 		return out
 
 	def writeline(self, line):
-		if(self.port.writeable()):
-			self.port.write(line)
-			return True
-
-		return False
-
+		self.port.write(line)
 
 if __name__ == '__main__':
 	newPort = PiSerialComm()

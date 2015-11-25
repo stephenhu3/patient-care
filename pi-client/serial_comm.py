@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
 	time.sleep(2)
 
-	newPort.writeline("bye")
+	newPort.writeline("Bye")
 
 	time.sleep(5)
 

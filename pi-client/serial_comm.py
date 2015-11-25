@@ -10,7 +10,7 @@ class PiSerialComm(object):
 		out = ''
 
 		while self.port.inWaiting() > 0:
-			out += ser.read(1)
+			out += self.read(1)
 
 		return out
 
@@ -20,9 +20,17 @@ class PiSerialComm(object):
 if __name__ == '__main__':
 	newPort = PiSerialComm()
 
-	newPort.writeline("t")
+	newPort.writeline("Hi DE2\n")
 
 	time.sleep(2)
+
+	newPort.writeline("This is Pi\n")
+
+	time.sleep(2)
+
+	newPort.writeline("bye")
+
+	time.sleep(5)
 
 	message = newPort.readline()
 

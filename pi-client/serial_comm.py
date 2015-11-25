@@ -20,9 +20,9 @@ class PiSerialComm(object):
 if __name__ == '__main__':
 	newPort = PiSerialComm()
 
-	newPort.writeline("Hello DE2, this is the Pi. How are you?")
+	newPort.writeline("t")
 
-	time.sleep(1)
+	time.sleep(2)
 
 	message = newPort.readline()
 

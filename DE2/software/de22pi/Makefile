@@ -142,9 +142,9 @@ ACDS_VERSION := 13.0sp1
 ELF := de22pi.elf
 
 # Paths to C, C++, and assembly source files.
-C_SRCS :=
-CXX_SRCS += Serial.cpp
-CXX_SRCS += PatientBoard.cpp
+C_SRCS += serial.c
+C_SRCS += PatientBoard.c
+CXX_SRCS :=
 ASM_SRCS :=
 
 

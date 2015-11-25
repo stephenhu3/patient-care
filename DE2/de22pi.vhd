@@ -96,14 +96,17 @@ ARCHITECTURE Structure OF de22pi IS
 				audio_DACLRCK : in STD_LOGIC;
 				audio_clk_in_clk : in STD_LOGIC;
 				audio_clk_out_clk : out STD_LOGIC;
-				pi_memory_address : in std_LOGIC_VECTOR(10 downto 0);
-				pi_memory_chipselect : in STD_LOGIC;
-				pi_memory_clken : in STD_LOGIC;
-				pi_memory_write : in STD_LOGIC;
-				pi_memory_readdata : out STD_LOGIC_VECTOR(7 downto 0);
-				pi_memory_writedata : in STD_LOGIC_VECTOR(7 downto 0);
+				--parallel_port_0_export : inout STD_LOGIC_VECTOR(31 downto 0);
+				--pi_memory_address : in std_LOGIC_VECTOR(10 downto 0);
+				--pi_memory_chipselect : in STD_LOGIC;
+				--pi_memory_clken : in STD_LOGIC;
+				--pi_memory_write : in STD_LOGIC;
+				--pi_memory_readdata : out STD_LOGIC_VECTOR(7 downto 0);
+				--pi_memory_writedata : in STD_LOGIC_VECTOR(7 downto 0);
 				pi_serial_rxd : in STD_LOGIC;
 				pi_serial_txd : out STD_LOGIC
+				--up_serial_RXD : in STD_LOGIC;
+				--up_serial_TXD : out STD_LOGIC
 				);
     END COMPONENT;
     SIGNAL DQM : STD_LOGIC_VECTOR(1 DOWNTO 0);
@@ -168,13 +171,16 @@ ARCHITECTURE Structure OF de22pi IS
 		  audio_DACLRCK => AUD_DACLRCK,
 		  audio_clk_in_clk => CLOCK_27,
 		  audio_clk_out_clk => AUD_XCK,
-		  pi_memory_address => GPIO_0(31 downto 21),
-		  pi_memory_chipselect => GPIO_0(20),
-		  pi_memory_clken => GPIO_0(19),
-		  pi_memory_write => GPIO_0(10),
-		  pi_memory_readdata => GPIO_0(18 downto 11),
-		  pi_memory_writedata => GPIO_0(10 downto 3),
+		  --parallel_port_0_export => GPIO_0(31 downto 0),
+		  --pi_memory_address => GPIO_0(31 downto 21),
+		  --pi_memory_chipselect => GPIO_0(20),
+		  --pi_memory_clken => GPIO_0(19),
+		  --pi_memory_write => GPIO_0(10),
+		  --pi_memory_readdata => GPIO_0(18 downto 11),
+		  --pi_memory_writedata => GPIO_0(10 downto 3),
 		  pi_serial_rxd => UART_RXD,
 		  pi_serial_txd => UART_TXD
+		  --up_serial_RXD => UART_RXD,
+		  --up_serial_TXD => UART_TXD
 		  );
 END Structure;

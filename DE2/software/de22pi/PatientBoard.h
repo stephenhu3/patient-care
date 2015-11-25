@@ -10,8 +10,8 @@
 
 #include "alt_types.h"
 
-
-void push_pin_ISR();
+void init_PUSH_IRQ();
+void push_ISR(void * context, alt_u32 id);
 
 
 

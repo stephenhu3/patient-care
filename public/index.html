@@ -15,7 +15,7 @@
     <div id="content"></div>
     <script type="text/babel">
       var Constants = {
-        api_url: "https://patient-care-rest.herokuapp.com/api"
+        apiUrl: "https://patient-care-rest.herokuapp.com/api"
       }
       
       // tutorial7.js
@@ -29,7 +29,7 @@
         },
 
         componentDidMount: function() {
-          var caretakerEndpoint = Constants["api_url"] + "/caretakers/" + this.props.caretaker_assigned;
+          var caretakerEndpoint = Constants["apiUrl"] + "/caretakers/" + this.props.caretaker_assigned;
           $.get(caretakerEndpoint, function(result) {
             if (this.isMounted()) {
               this.setState({
@@ -128,7 +128,7 @@
       var PatientBox = React.createClass({
         loadPatientsFromServer: function() {
           $.ajax({
-            url: this.props.api_url + "/patients",
+            url: this.props.apiUrl + "/patients",
             dataType: 'json',
             cache: false,
             success: function(data) {
@@ -144,7 +144,7 @@
           var newPatients = patients.concat([patient]);
           this.setState({data: newPatients});
           $.ajax({
-            url: this.props.api_url + "/patients",
+            url: this.props.apiUrl + "/patients",
             dataType: 'json',
             type: 'POST',
             data: patient,
@@ -178,21 +178,28 @@
         getInitialState: function() {
           return {
             instructions: '',
-            medication_assigned: '',
+            medication_assigned: [],
             alert_assigned: []
           };
         },
 
         componentDidMount: function() {
-          var prescriptionEndpoint = Constants["api_url"] + "/prescriptions/" + this.props.data;
+          var prescriptionEndpoint = Constants["apiUrl"] + "/prescriptions/" + this.props.data;
           console.log(prescriptionEndpoint);
           $.get(prescriptionEndpoint, function(result) {
             if (this.isMounted()) {
               this.setState({
                 instructions: result.instructions,
-                medication_assigned: result.medication_assigned,
                 alert_assigned: result.alert_assigned
               });
+              var medicationEndpoint = Constants["apiUrl"] + "/medications/" + result.medication_assigned
+              $.get(medicationEndpoint, function(result) {
+                if (this.isMounted()) {
+                  this.setState({
+                    medicationName: result.name
+                  });
+                }
+              }.bind(this));
             }
           }.bind(this));
         },
@@ -204,10 +211,13 @@
 
         render: function() {
           return (
-            <div>
-              prescription: {this.props.data}
-              instructions: {this.state.instructions}
-              {<Medication data={this.state.medication_assigned} />}
+            <div class="medication">
+              <div class="medicationName">
+                Name: {this.state.medicationName}
+              </div>
+              <div class="medicationInstructions">
+                Instructions: {this.state.instructions}
+              </div>
             </div>
           );
         }
@@ -224,7 +234,6 @@
             );
           });
 
-          console.log(prescriptionNodes);
           return (
             <div className="prescriptionList">
               {prescriptionNodes}
@@ -233,49 +242,8 @@
         }
       });
 
-      var Medication = React.createClass({
-        getInitialState: function() {
-          return {
-            medicationName: ''
-          };
-        },
-
-        componentDidMount: function() {
-          // TODO: Current issue:
-          // medicationID passed in display in the HTML element, but as a variable it is empty
-          // need to get medicationEndpoint to include the medicationID
-          var medicationID = this.props.data;
-          console.log(this.props.data);
-          console.log("medicationID");
-          console.log(medicationID);
-          var medicationEndpoint = Constants["api_url"] + "/medications/" + medicationID;
-          console.log(medicationEndpoint);
-          $.get(medicationEndpoint, function(result) {
-            if (this.isMounted()) {
-              this.setState({
-                medicationName: result.name
-              });
-            }
-          }.bind(this));
-        },
-
-        rawMarkup: function() {
-          var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
-          return { __html: rawMarkup };
-        },
-
-        render: function() {
-          return (
-            <div>
-              medication: {this.props.data}
-              name: {this.state.medicationName}
-            </div>
-          );
-        }
-      });
-
       ReactDOM.render(
-        <PatientBox api_url="https://patient-care-rest.herokuapp.com/api/" pollInterval={2000} />,
+        <PatientBox apiUrl="https://patient-care-rest.herokuapp.com/api" pollInterval={2000} />,
         document.getElementById('content')
       );
 

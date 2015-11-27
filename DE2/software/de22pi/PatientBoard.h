@@ -10,9 +10,9 @@
 
 #include "alt_types.h"
 
-void init_PUSH_IRQ();
-void push_ISR(void * context, alt_u32 id);
-
+void init_push_irq();
+void push_isr(void * context, alt_u32 id);
+void init_timer_irq();
 
 
 #endif /* PATIENTBOARD_H_ */

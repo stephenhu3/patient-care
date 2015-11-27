@@ -21,6 +21,7 @@
 #include "alt_types.h"
 #include "altera_avalon_pio_regs.h"
 #include "altera_up_avalon_character_lcd.h"
+#include "altera_avalon_timer.h"
 #include "PatientBoard.h"
 #include "sys/alt_irq.h"
 #include "system.h"
@@ -38,7 +39,7 @@
 int state = WAIT_PI;
 int state_changed = 1;
 
-void push_ISR(void * context, alt_u32 id)
+void push_isr(void * context, alt_u32 id)
 {
 	alt_irq_context cpu_sr = alt_irq_disable_all();
 	if(state == WAIT_PUSH) {
@@ -100,10 +101,13 @@ int push_LCD_init(alt_up_character_lcd_dev* tutorial_lcd)
     return 0;
 }
 
-void init_PUSH_IRQ() {
+void init_push_irq() {
 	IOWR_ALTERA_AVALON_PIO_IRQ_MASK(KEYS_BASE, 0x1);
 	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(KEYS_BASE, 0x0);
-	alt_irq_register((alt_u32)KEYS_IRQ, NULL, push_ISR);
+	alt_irq_register((alt_u32)KEYS_IRQ, NULL, push_isr);
+}
+
+void init_timer_irq() {
 }
 
 int main()
@@ -114,27 +118,33 @@ int main()
 	//
 	// alt_irq_register( (alt_u32)UART_0_IRQ, NULL, process_Serial );
     alt_up_character_lcd_dev* de2_lcd = alt_up_character_lcd_open_dev(CHARACTER_LCD_0_NAME);
-    init_PUSH_IRQ();
-    char* msg = "Detected the character 't'.\n";
+    init_push_irq();
     FILE* fp;
     char prompt[256] = "";
-    fp = fopen (RS232_0_0_NAME, "r+"); //Open file for reading and writing
+    int prompt_index = 0;
+    fp = fopen(RS232_0_0_NAME, "r+"); //Open file for reading and writing
     if (fp)
     {
     	char serial_char;
     	printf("Opened successfully.\n");
     	while (strcmp(prompt,"Bye")!=0)
-    	{ // Loop until we receive a 'v'.
+    	{ // Loop until we receive "Bye"
+    		prompt_index = 0;
+    		prompt[0] = '\0';
     		printf("entered the loop.\n");
 //    		fread(prompt,1,32,fp); // Get a character from the UART.
-    		while((serial_char = getc(fp))!='\n') {
-    			strcat(prompt,&serial_char);
-    			fwrite(&serial_char,1,1,fp);
+    		fread(&serial_char,1,1,fp);
+    		while(serial_char != '\0') {
+    		// while((serial_char = getc(fp))!='\n') {
+    			//strcat(prompt,&serial_char);
+    			prompt[prompt_index++] = serial_char;
+    			fprintf(fp,"%c",serial_char);
     			printf("%c", serial_char);
+    			fread(&serial_char,1,1,fp);
     		}
+    		prompt[prompt_index++] = serial_char;
     		printf(prompt);
-    		fprintf(fp, prompt);
-    		prompt[0] = '\0';
+    		fprintf(fp, "Post-concat:\n%s", prompt);
     	}
     	fprintf(fp, "See you later, alligator!\n");
     	printf("We're done boys.\n");
@@ -142,46 +152,4 @@ int main()
     }
     else printf("Can't open.\n");
     return 0;
-
-
-//    if(de2_lcd == NULL)
-//    {
-//    	printf("Can't open LCD\n");
-//    }
-//    else
-//    {
-//        printf("Initialising LCD\n");
-//        printf("Initialising LCD\n");
-//        push_LCD_init(de2_lcd);
-//        printf("Initialised\n");
-//        char_lcd_clear(de2_lcd);
-//    }
-//    while(1)
-//    {
-//    	if(state_changed) {
-//    		switch(state) {
-//    			case WAIT_ACK:
-//    				print_wait_ack(de2_lcd);
-//    				state_changed = 0;
-//    				break;
-//    			case WAIT_PI:
-//    				print_wait(de2_lcd);
-//    				state_changed = 0;
-//    				break;
-//    			case WAIT_PUSH:
-//    				print_push_button(de2_lcd);
-//    				state_changed = 0;
-//    				break;
-//    			case PUSH_DONE:
-//    				print_wait_ack(de2_lcd);
-//    				state_changed = 0;
-//    				break;
-//    			default:
-//    				print_wait_ack(de2_lcd);
-//    				state_changed = 0;
-//    				break;
-//    		}
-//    	}
-//    }
-//	return 0;
 }

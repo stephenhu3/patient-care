@@ -15,17 +15,19 @@
  */
 
 #include <stdio.h>
-#include <unistd.h>
 #include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include "alt_types.h"
 #include "altera_avalon_pio_regs.h"
 #include "altera_up_avalon_character_lcd.h"
-#include "altera_avalon_timer.h"
+#include "altera_avalon_timer_regs.h"
 #include "PatientBoard.h"
 #include "sys/alt_irq.h"
 #include "system.h"
 
+#define DEBUG 1
 
 #define BLANK_LINE "                " // something is here don't touch!
 #define BASE_DEMO_DIR 0xFFFFFFFC // most pins don't matter but last eight need to be
@@ -43,14 +45,6 @@ int button_pushed = 0;
 void push_isr(void * context, alt_u32 id)
 {
 	alt_irq_context cpu_sr = alt_irq_disable_all();
-//	if(state == WAIT_PUSH) {
-//		int push_val = IORD_ALTERA_AVALON_PIO_EDGE_CAP(KEYS_BASE);
-//		if(push_val & KEY_0_MASK) {
-//			state = PUSH_DONE;
-//			state_changed = 1;
-//		}
-//	}
-//	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(KEYS_BASE, 0x0);
 	int push_val = IORD_ALTERA_AVALON_PIO_EDGE_CAP(KEYS_BASE);
 	if(push_val & KEY_0_MASK) {
 		button_pushed=1;
@@ -114,6 +108,7 @@ void init_push_irq() {
 }
 
 void init_timer_irq() {
+
 }
 
 int main()
@@ -124,44 +119,62 @@ int main()
 	//
 	// alt_irq_register( (alt_u32)UART_0_IRQ, NULL, process_Serial );
     //alt_up_character_lcd_dev* de2_lcd = alt_up_character_lcd_open_dev(CHARACTER_LCD_0_NAME);
-    FILE* fp;
-    fp = fopen(RS232_0_0_NAME, "r+"); //Open file for reading and writing
+    int fd = open(RS232_0_0_NAME, O_NONBLOCK | O_RDWR); //Open file for reading and writing
     init_push_irq();
+    int prompt_len = 0;
     char prompt[256] = "";
     int prompt_index = 0;
-    if (fp)
+    char * later_gator = "See you later, alligator!\n";
+    char * pushed = "PUSHED THE BUTTON!";
+    if (fd)
     {
-    	char serial_char;
-    	printf("Opened successfully.\n");
+    	if(DEBUG)
+    		printf("Opened successfully.\n");
+
     	while (strcmp(prompt,"Bye")!=0)
     	{ // Loop until we receive "Bye"
+
+    		if(button_pushed)
+    		{
+	    		write(fd,pushed,strlen(pushed));
+	    		button_pushed=0;
+	    	}
+
     		prompt_index = 0;
     		prompt[0] = '\0';
-    		printf("entered the loop.\n");
-//    		fread(prompt,1,32,fp); // Get a character from the UART.
-    		fread(&serial_char,1,1,fp);
-    		while(serial_char != '\0')
+    		prompt_len = read(fd, prompt, 128);
+    		if(DEBUG && prompt_len > 0)
     		{
-    			if(button_pushed)
-    			{
-    				fprintf(fp,"%s","PUSHED THE BUTTON!");
-    				button_pushed=0;
-    			}
-    		// while((serial_char = getc(fp))!='\n') {
-    			//strcat(prompt,&serial_char);
-    			prompt[prompt_index++] = serial_char;
-    			fprintf(fp,"%c",serial_char);
-    			printf("%c", serial_char);
-    			fread(&serial_char,1,1,fp);
+    			printf("No. chars received:%d\n",prompt_len);
+    			printf("Message:%s\n", prompt);
     		}
-    		prompt[prompt_index++] = serial_char;
-    		printf(prompt);
-    		fprintf(fp, "Post-concat:\n%s", prompt);
+//    		while(serial_char != '\0')
+//    		{
+//    			if(button_pushed)
+//    			{
+//    				fprintf(fp,"%s","PUSHED THE BUTTON!");
+//    				button_pushed=0;
+//    			}
+//    		// while((serial_char = getc(fp))!='\n') {
+//    			//strcat(prompt,&serial_char);
+//    			prompt[prompt_index++] = serial_char;
+//    			fprintf(fp,"%c",serial_char);
+//    			printf("%c", serial_char);
+//    			fread(&serial_char,1,1,fp);
+//    		}
+//    		prompt[prompt_index++] = serial_char;
+//    		printf(prompt);
+    		write(fd, prompt, strlen(prompt));
     	}
-    	fprintf(fp, "See you later, alligator!\n");
-    	printf("We're done boys.\n");
-    	fclose (fp);
+    	write(fd, later_gator, strlen(later_gator));
+    	if(DEBUG)
+    	{
+    		printf(later_gator);
+    		printf("Closing file.\n");
+    	}
+    	close(fd);
     }
-    else printf("Can't open.\n");
+    else if(DEBUG)
+    	printf("Can't open.\n");
     return 0;
 }

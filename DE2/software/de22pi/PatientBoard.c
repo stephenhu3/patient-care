@@ -38,16 +38,22 @@
 
 int state = WAIT_PI;
 int state_changed = 1;
+int button_pushed = 0;
 
 void push_isr(void * context, alt_u32 id)
 {
 	alt_irq_context cpu_sr = alt_irq_disable_all();
-	if(state == WAIT_PUSH) {
-		int push_val = IORD_ALTERA_AVALON_PIO_EDGE_CAP(KEYS_BASE);
-		if(push_val & KEY_0_MASK) {
-			state = PUSH_DONE;
-			state_changed = 1;
-		}
+//	if(state == WAIT_PUSH) {
+//		int push_val = IORD_ALTERA_AVALON_PIO_EDGE_CAP(KEYS_BASE);
+//		if(push_val & KEY_0_MASK) {
+//			state = PUSH_DONE;
+//			state_changed = 1;
+//		}
+//	}
+//	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(KEYS_BASE, 0x0);
+	int push_val = IORD_ALTERA_AVALON_PIO_EDGE_CAP(KEYS_BASE);
+	if(push_val & KEY_0_MASK) {
+		button_pushed=1;
 	}
 	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(KEYS_BASE, 0x0);
 	alt_irq_enable_all(cpu_sr);
@@ -117,12 +123,12 @@ int main()
 	// use timer to figure out how long we'll turn off the alarm
 	//
 	// alt_irq_register( (alt_u32)UART_0_IRQ, NULL, process_Serial );
-    alt_up_character_lcd_dev* de2_lcd = alt_up_character_lcd_open_dev(CHARACTER_LCD_0_NAME);
-    init_push_irq();
+    //alt_up_character_lcd_dev* de2_lcd = alt_up_character_lcd_open_dev(CHARACTER_LCD_0_NAME);
     FILE* fp;
+    fp = fopen(RS232_0_0_NAME, "r+"); //Open file for reading and writing
+    init_push_irq();
     char prompt[256] = "";
     int prompt_index = 0;
-    fp = fopen(RS232_0_0_NAME, "r+"); //Open file for reading and writing
     if (fp)
     {
     	char serial_char;
@@ -134,7 +140,13 @@ int main()
     		printf("entered the loop.\n");
 //    		fread(prompt,1,32,fp); // Get a character from the UART.
     		fread(&serial_char,1,1,fp);
-    		while(serial_char != '\0') {
+    		while(serial_char != '\0')
+    		{
+    			if(button_pushed)
+    			{
+    				fprintf(fp,"%s","PUSHED THE BUTTON!");
+    				button_pushed=0;
+    			}
     		// while((serial_char = getc(fp))!='\n') {
     			//strcat(prompt,&serial_char);
     			prompt[prompt_index++] = serial_char;

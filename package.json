@@ -5,7 +5,9 @@
   "main": "server.js",
   "dependencies": {
     "body-parser": "^1.4.3",
-    "express": "^4.4.5"
+    "express": "^4.4.5",
+    "material-ui":"^0.13.4",
+    "react-tap-event-plugin": "^0.2.1"
   },
   "devDependencies": {},
   "scripts": {

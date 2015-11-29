@@ -1,252 +1,330 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title>Patient Care Monitoring System</title>
-    <!-- Not present in the tutorial. Just for basic styling. -->
-    <link rel="stylesheet" href="css/base.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.0/react.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.0/react-dom.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.6.15/browser.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
-  </head>
-  <body>
-    <div id="content"></div>
-    <script type="text/babel">
-      var Constants = {
-        apiUrl: "https://patient-care-rest.herokuapp.com/api"
-      }
-      
-      // tutorial7.js
-      var Patient = React.createClass({
-        getInitialState: function() {
-          return {
-            caretakerFirstName: '',
-            caretakerLastName: '',
-            prescriptions: []
-          };
-        },
-
-        componentDidMount: function() {
-          var caretakerEndpoint = Constants["apiUrl"] + "/caretakers/" + this.props.caretaker_assigned;
-          $.get(caretakerEndpoint, function(result) {
-            if (this.isMounted()) {
-              this.setState({
-                caretakerFirstName: result.first_name,
-                caretakerLastName: result.last_name
-              });
+    <head>
+        <meta charset="utf-8">
+        <title>Patient Care Monitoring System</title>
+        <!-- Not present in the tutorial. Just for basic styling. -->
+        <link rel="stylesheet" href="css/base.css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.0/react.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.0/react-dom.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.6.15/browser.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
+        <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500' rel='stylesheet' type='text/css'>
+    </head>
+    <body>
+        <div id="content"></div>
+        <script type="text/babel">
+            var Constants = {
+                apiUrl: "https://patient-care-rest.herokuapp.com/api"
             }
-          }.bind(this));
-        },
+            
+            // tutorial7.js
+            var Patient = React.createClass({
+                getInitialState: function() {
+                    return {
+                        caretakerFirstName: '',
+                        caretakerLastName: '',
+                        prescriptions: []
+                    };
+                },
 
-        rawMarkup: function() {
-          var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
-          return { __html: rawMarkup };
-        },
+                componentDidMount: function() {
+                    var caretakerEndpoint = Constants["apiUrl"] + "/caretakers/" + this.props.caretaker_assigned;
+                    $.get(caretakerEndpoint, function(result) {
+                        if (this.isMounted()) {
+                            this.setState({
+                                caretakerFirstName: result.first_name,
+                                caretakerLastName: result.last_name
+                            });
+                        }
+                    }.bind(this));
+                },
 
-        medTaken: function() {
-          return this.props.medication_taken ? "Taken" : "Not Taken";
-        },
+                rawMarkup: function() {
+                    var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
+                    return { __html: rawMarkup };
+                },
 
-        getPrescription: function() {
-          return this.props.medication_taken ? "Taken" : "Not Taken";
-        },
+                medTaken: function() {
+                    return this.props.medication_taken ? "Taken" : "Not Taken";
+                },
 
-        render: function() {
-          return (
-            <div className="patient">
-              <h2 className="patientName">
-                Name: {this.props.first_name} {this.props.last_name}
-              </h2>
-              <h2 className="patientAge">
-                Age: {this.props.age}
-              </h2>
-              <h2 className="patientPhone">
-                Phone: {this.props.phone}
-              </h2>
-              <h2 className="patientMedicationTaken">
-                Medication Status: {this.medTaken()}
-              </h2>
-              <h2 className="patientCaretakerAssigned">
-                Assigned Caretaker: {this.state.caretakerFirstName} {this.state.caretakerLastName}
-              </h2>
-              <span dangerouslySetInnerHTML={this.rawMarkup()} />
-            </div>
-          );
-        }
-      });
+                getPrescription: function() {
+                    return this.props.medication_taken ? "Taken" : "Not Taken";
+                },
 
-      // tutorial10.js
-      var PatientList = React.createClass({
-        render: function() {
-          var patientNodes = this.props.data.map(function (patient) {
-            return (
-              <div>
-                <Patient first_name={patient.first_name} last_name={patient.last_name} age={patient.age} phone={patient.phone} medication_taken={patient.medication_taken} caretaker_assigned={patient.caretaker_assigned}>
-                  Assigned Prescriptions: {patient.prescription_assigned}
-                </Patient>
-                <PrescriptionList data={patient.prescription_assigned}/>
-              </div>
-            );
-          });
-          return (
-            <div className="patientList">
-              {patientNodes}
-            </div>
-          );
-        }
-      });
-
-      // tutorial18.js
-      var PatientForm = React.createClass({
-        handleSubmit: function(e) {
-          e.preventDefault();
-          var author = this.refs.author.value.trim();
-          var text = this.refs.text.value.trim();
-          if (!text || !author) {
-            return;
-          }
-          this.props.onPatientSubmit({first_name: first_name, last_name: last_name, age: age});
-          this.refs.first_name.value = '';
-          this.refs.last_name.value = '';
-          return;
-        },
-        render: function() {
-          return (
-            <form className="patientForm" onSubmit={this.handleSubmit}>
-              <input type="text" placeholder="Patient First Name" ref="first_name" />
-              <input type="text" placeholder="Patient Last Name" ref="last_name" />
-              <input type="text" placeholder="Patient Age" ref="age" />
-              <input type="submit" value="Post" />
-            </form>
-          );
-        }
-      });
-
-      // tutorial20.js
-      var PatientBox = React.createClass({
-        loadPatientsFromServer: function() {
-          $.ajax({
-            url: this.props.apiUrl + "/patients",
-            dataType: 'json',
-            cache: false,
-            success: function(data) {
-              this.setState({data: data});
-            }.bind(this),
-            error: function(xhr, status, err) {
-              console.error(url, status, err.toString());
-            }.bind(this)
-          });
-        },
-        handlePatientSubmit: function(patient) {
-          var patients = this.state.data;
-          var newPatients = patients.concat([patient]);
-          this.setState({data: newPatients});
-          $.ajax({
-            url: this.props.apiUrl + "/patients",
-            dataType: 'json',
-            type: 'POST',
-            data: patient,
-            success: function(data) {
-              this.setState({data: data});
-            }.bind(this),
-            error: function(xhr, status, err) {
-              console.error(url, status, err.toString());
-            }.bind(this)
-          });
-        },
-        getInitialState: function() {
-          return {data: []};
-        },
-        componentDidMount: function() {
-          this.loadPatientsFromServer();
-          setInterval(this.loadPatientsFromServer, this.props.pollInterval);
-        },
-        render: function() {
-          return (
-            <div className="patientBox">
-              <h1>Patients</h1>
-              <PatientList data={this.state.data}/>
-              <PatientForm onPatientSubmit={this.handlePatientSubmit} />
-            </div>
-          );
-        }
-      });
-
-      var Prescription = React.createClass({
-        getInitialState: function() {
-          return {
-            instructions: '',
-            medication_assigned: [],
-            alert_assigned: []
-          };
-        },
-
-        componentDidMount: function() {
-          var prescriptionEndpoint = Constants["apiUrl"] + "/prescriptions/" + this.props.data;
-          console.log(prescriptionEndpoint);
-          $.get(prescriptionEndpoint, function(result) {
-            if (this.isMounted()) {
-              this.setState({
-                instructions: result.instructions,
-                alert_assigned: result.alert_assigned
-              });
-              var medicationEndpoint = Constants["apiUrl"] + "/medications/" + result.medication_assigned
-              $.get(medicationEndpoint, function(result) {
-                if (this.isMounted()) {
-                  this.setState({
-                    medicationName: result.name
-                  });
+                render: function() {
+                    return (
+                        <div className="patient">
+                            <h3 className="patientName">
+                                Name: {this.props.first_name} {this.props.last_name}
+                            </h3>
+                            <h4 className="patientAge">
+                                Age: {this.props.age}
+                            </h4>
+                            <h4 className="patientPhone">
+                                Phone: {this.props.phone}
+                            </h4>
+                            <h4 className="patientMedicationTaken">
+                                Medication Status: {this.medTaken()}
+                            </h4>
+                            <h4 className="patientCaretakerAssigned">
+                                Assigned Caretaker: {this.state.caretakerFirstName} {this.state.caretakerLastName}
+                            </h4>
+                            <span dangerouslySetInnerHTML={this.rawMarkup()} />
+                        </div>
+                    );
                 }
-              }.bind(this));
-            }
-          }.bind(this));
-        },
+            });
 
-        rawMarkup: function() {
-          var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
-          return { __html: rawMarkup };
-        },
+            // tutorial10.js
+            var PatientList = React.createClass({
+                render: function() {
+                    var patientNodes = this.props.data.map(function (patient) {
+                        return (
+                            <div key={patient}>
+                                <Patient first_name={patient.first_name} last_name={patient.last_name} age={patient.age} phone={patient.phone} medication_taken={patient.medication_taken} caretaker_assigned={patient.caretaker_assigned}>
+                                    {/*TODO: strange behaviour: this needs to be removed, but if it is, causes several exceptions,
+                                    could be due to lack of unique key prop*/}
+                                    {patient.prescription_assigned}
+                                </Patient>
+                                <PrescriptionList key={patient} data={patient.prescription_assigned}/>
+                            </div>
+                        );
+                    });
+                    return (
+                        <div className="patientList">
+                            {patientNodes}
+                        </div>
+                    );
+                }
+            });
 
-        render: function() {
-          return (
-            <div class="medication">
-              <div class="medicationName">
-                Assigned Medication: {this.state.medicationName}
-              </div>
-              <div class="medicationInstructions">
-                Instructions: {this.state.instructions}
-              </div>
-            </div>
-          );
-        }
-      });
+            // tutorial18.js
+            var PatientForm = React.createClass({
+                handleSubmit: function(e) {
+                    e.preventDefault();
+                    var author = this.refs.author.value.trim();
+                    var text = this.refs.text.value.trim();
+                    if (!text || !author) {
+                        return;
+                    }
+                    this.props.onPatientSubmit({first_name: first_name, last_name: last_name, age: age});
+                    this.refs.first_name.value = '';
+                    this.refs.last_name.value = '';
+                    return;
+                },
+                render: function() {
+                    return (
+                        <form className="patientForm" onSubmit={this.handleSubmit}>
+                            <input type="text" placeholder="Patient First Name" ref="first_name" />
+                            <input type="text" placeholder="Patient Last Name" ref="last_name" />
+                            <input type="text" placeholder="Patient Age" ref="age" />
+                            <input type="submit" value="Post" />
+                        </form>
+                    );
+                }
+            });
 
-      var PrescriptionList = React.createClass({
-        render: function() {
-          console.log(this.props.data);
+            // tutorial20.js
+            var PatientBox = React.createClass({
+                loadPatientsFromServer: function() {
+                    $.ajax({
+                        url: this.props.apiUrl + "/patients",
+                        dataType: 'json',
+                        cache: false,
+                        success: function(data) {
+                            this.setState({data: data});
+                        }.bind(this),
+                        error: function(xhr, status, err) {
+                            console.error(url, status, err.toString());
+                        }.bind(this)
+                    });
+                },
+                handlePatientSubmit: function(patient) {
+                    var patients = this.state.data;
+                    var newPatients = patients.concat([patient]);
+                    this.setState({data: newPatients});
+                    $.ajax({
+                        url: this.props.apiUrl + "/patients",
+                        dataType: 'json',
+                        type: 'POST',
+                        data: patient,
+                        success: function(data) {
+                            this.setState({data: data});
+                        }.bind(this),
+                        error: function(xhr, status, err) {
+                            console.error(url, status, err.toString());
+                        }.bind(this)
+                    });
+                },
+                getInitialState: function() {
+                    return {data: []};
+                },
+                componentDidMount: function() {
+                    this.loadPatientsFromServer();
+                    setInterval(this.loadPatientsFromServer, this.props.pollInterval);
+                },
+                render: function() {
+                    return (
+                        <div className="patientBox">
+                            <h1>Patients</h1>
+                            <PatientList data={this.state.data}/>
+                            <PatientForm onPatientSubmit={this.handlePatientSubmit} />
+                        </div>
+                    );
+                }
+            });
 
-        var prescriptionNodes = this.props.data.map(function (prescription) {
-            return (
-              <Prescription data={prescription}>
-              </Prescription>
+            var Prescription = React.createClass({
+                getInitialState: function() {
+                    return {
+                        instructions: '',
+                        medication_assigned: [],
+                        alert_assigned: []
+                    };
+                },
+
+                componentDidMount: function() {
+                    var prescriptionEndpoint = Constants["apiUrl"] + "/prescriptions/" + this.props.data;
+                    $.get(prescriptionEndpoint, function(result) {
+                        if (this.isMounted()) {
+                            this.setState({
+                                instructions: result.instructions,
+                                alert_assigned: result.alert_assigned
+                            });
+                            var medicationEndpoint = Constants["apiUrl"] + "/medications/" + result.medication_assigned
+                            $.get(medicationEndpoint, function(result) {
+                                if (this.isMounted()) {
+                                    this.setState({
+                                        medicationName: result.name
+                                    });
+                                }
+                            }.bind(this));
+                        }
+                    }.bind(this));
+                },
+
+                rawMarkup: function() {
+                    var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
+                    return { __html: rawMarkup };
+                },
+
+                render: function() {
+                    return (
+                        <div class="medication">
+                            <h3 class="medicationName">
+                                Assigned Medication: {this.state.medicationName}
+                            </h3>
+                            <h4 class="medicationInstructions">
+                                Instructions: {this.state.instructions}
+                            </h4>
+                            <AlertList data={this.state.alert_assigned}></AlertList>
+                        </div>
+                    );
+                }
+            });
+
+            var PrescriptionList = React.createClass({
+                render: function() {
+
+                var prescriptionNodes = this.props.data.map(function (prescription) {
+                        return (
+                            <Prescription key={prescription} data={prescription}>
+                            </Prescription>
+                        );
+                    });
+
+                    return (
+                        <div className="prescriptionList">
+                            {prescriptionNodes}
+                        </div>
+                    );
+                }
+            });
+
+            var Alert = React.createClass({
+                getInitialState: function() {
+                    return {
+                        hour: 0,
+                        timeout: 0,
+                        schedule: {} 
+                    };
+                },
+
+                componentDidMount: function() {
+                    var alertEndpoint = Constants["apiUrl"] + "/alerts/" + this.props.data;
+                    $.get(alertEndpoint, function(result) {
+                        if (this.isMounted()) {
+                            this.setState({
+                                hour: result.hour,
+                                timeout: result.timeout,
+                                schedule: result.schedule
+                            });
+                        }
+                    }.bind(this));
+                },
+
+                rawMarkup: function() {
+                    var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
+                    return { __html: rawMarkup };
+                },
+
+                getTime: function(hour) {
+                    if (hour <= 11)
+                        return hour + " AM";
+                    else if (hour == 12)
+                        return hour + " PM";
+                    else
+                        return hour-12 + " PM";
+                },
+
+                getSchedule: function(schedule) {
+                    var days = "";
+                    for (var day in schedule) {
+                        if (schedule[day])
+                            days += day + ", ";
+                    }
+                    return days.substring(0, days.length - 2);
+                },
+
+                render: function() {
+                    return (
+                        <div class="alert">
+                            <h4 class="alertSchedule">
+                                Schedule: {this.getSchedule(this.state.schedule)} at {this.getTime(this.state.hour)}
+                            </h4>
+                            <h4 class="alertTimeout">
+                                Alert Timeout: {this.state.timeout} minutes
+                            </h4>
+                        </div>
+                    );
+                }
+            });
+
+            var AlertList = React.createClass({
+                render: function() {
+                    var alertNodes = this.props.data.map(function (alert) {
+                        return (
+                            <Alert key={alert} data={alert}>
+                            </Alert>
+                        );
+                    });
+
+                    return (
+                        <div className="alertList">
+                            {alertNodes}
+                        </div>
+                    );
+                }
+            });
+
+            ReactDOM.render(
+                <PatientBox apiUrl="https://patient-care-rest.herokuapp.com/api" pollInterval={2000} />,
+                document.getElementById('content')
             );
-          });
 
-          return (
-            <div className="prescriptionList">
-              {prescriptionNodes}
-            </div>
-          );
-        }
-      });
-
-      ReactDOM.render(
-        <PatientBox apiUrl="https://patient-care-rest.herokuapp.com/api" pollInterval={2000} />,
-        document.getElementById('content')
-      );
-
-    </script>
-  </body>
+        </script>
+    </body>
 </html>

@@ -15,6 +15,7 @@ var path = require('path');
 var express = require('express');
 var bodyParser = require('body-parser');
 var app = express();
+var injectTapEventPlugin = require("react-tap-event-plugin");
 
 var COMMENTS_FILE = path.join(__dirname, 'comments.json');
 

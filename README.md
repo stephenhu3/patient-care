@@ -5,5 +5,5 @@ Patient to caretaker hardware to web monitoring interface for tracking prescript
 "npm install"<br>
 "npm start"<br>
 
-#####Access deployed API at http://patient-care-rest.herokuapp.com/api
+#####Access deployed API at https://patient-care-rest.herokuapp.com/api
 Note: automatic deploys from api-release branch<br>

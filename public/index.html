@@ -10,7 +10,14 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.6.15/browser.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
-        <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" href="https://bootswatch.com/cosmo/bootstrap.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.3/react.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.3/react-dom.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.28.1/react-bootstrap.min.js"></script>
+        <script>
+            // Import Bootstrap components used
+            var Panel = ReactBootstrap.Panel;
+        </script>
     </head>
     <body>
         <div id="content"></div>
@@ -214,13 +221,12 @@
                 render: function() {
                     return (
                         <div class="medication">
-                            <h3 class="medicationName">
-                                Assigned Medication: {this.state.medicationName}
-                            </h3>
+                        <Panel header={<h3 class="medicationName">Assigned Medication: {this.state.medicationName}</h3>}>
                             <h4 class="medicationInstructions">
                                 Instructions: {this.state.instructions}
                             </h4>
                             <AlertList data={this.state.alert_assigned}></AlertList>
+                        </Panel>
                         </div>
                     );
                 }
@@ -292,12 +298,14 @@
                 render: function() {
                     return (
                         <div class="alert">
-                            <h4 class="alertSchedule">
-                                Schedule: {this.getSchedule(this.state.schedule)} at {this.getTime(this.state.hour)}
-                            </h4>
-                            <h4 class="alertTimeout">
-                                Alert Timeout: {this.state.timeout} minutes
-                            </h4>
+                            <Panel header="Schedule:">
+                                <h4 class="alertSchedule">
+                                    {this.getSchedule(this.state.schedule)} at {this.getTime(this.state.hour)}
+                                </h4>
+                                <h4 class="alertTimeout">
+                                    Alert Timeout: {this.state.timeout} minutes
+                                </h4>
+                            </Panel>
                         </div>
                     );
                 }

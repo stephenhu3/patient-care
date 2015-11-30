@@ -17,17 +17,17 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <fcntl.h>
 
 #include "alt_types.h"
 #include "altera_avalon_pio_regs.h"
 #include "altera_avalon_timer.h"
-#include "sys/alt_alarm.h"
-
 #include "altera_up_avalon_character_lcd.h"
-#include "PatientBoard.h"
+#include "sys/alt_alarm.h"
 #include "sys/alt_irq.h"
 #include "system.h"
+
+#include "PatientBoard.h"
+#include "serial.h"
 
 #define DEBUG 1
 
@@ -38,7 +38,10 @@
 #define WAIT_ACK 0
 #define WAIT_PI 1
 #define WAIT_PUSH 2
+#define PERIOD_MINUTES 1
+#define PERIOD_SECONDS PERIOD_MINUTES * 60
 #define PUSH_DONE 3
+#define PUSH_MSG "Medicine taken"
 
 int state = WAIT_PI;
 int state_changed = 1;
@@ -104,70 +107,50 @@ void init_push_irq(void * function) {
 
 int main()
 {
-	// initialize the ISR
 	// when display needs to be updated, do so (see string that's sent)
-	// use timer to figure out how long we'll turn off the alarm
-	//
 	// alt_irq_register( (alt_u32)UART_0_IRQ, NULL, process_Serial );
-    //alt_up_character_lcd_dev* de2_lcd = alt_up_character_lcd_open_dev(CHARACTER_LCD_0_NAME);
+	// setup
+    alt_up_character_lcd_dev* de2_lcd = alt_up_character_lcd_open_dev(CHARACTER_LCD_0_NAME);
+	alt_alarm * serial_alarm;
+	serial * de22pi_rs232 = initialize_serial(RS232_0_0_BASE, RS232_0_0_NAME,
+			RS232_0_0_IRQ, RS232_0_0_IRQ_INTERRUPT_CONTROLLER_ID);
+	if(de22pi_rs232 == NULL && DEBUG) {
+		printf("Serial initialisation for %s failed.\n", RS232_0_0_NAME);
+		printf("Exiting...\n");
+		return -1;
+	}
 
-
-    int fd = open(RS232_0_0_NAME, O_NONBLOCK | O_RDWR); //Open file for reading and writing
+	int errno;
+	if((errno = alt_alarm_start(serial_alarm, PERIOD_SECONDS * TIMER_0_FREQ,
+			serial_read, (void *) de22pi_rs232))== 0)
+	{
+		// somebody set us up the bomb #zerowing
+		// the alarm is set up. properly so we
+		alt_avalon_timer_sc_init(TIMER_0_BASE,
+				TIMER_0_IRQ_INTERRUPT_CONTROLLER_ID,
+				TIMER_0_IRQ,
+				TIMER_0_FREQ);
+	}
+	else if (DEBUG)
+	{
+		printf("Alarm initialisation failed with error %d.\n", errno);
+		printf("Exiting...\n");
+		return errno;
+	}
     init_push_irq(push_isr);
-    int prompt_len = 0;
-    char prompt[256] = "";
-    int prompt_index = 0;
-    char * later_gator = "See you later, alligator!\n";
-    char * pushed = "PUSHED THE BUTTON!";
-    if (fd)
-    {
-    	if(DEBUG)
-    		printf("Opened successfully.\n");
 
-    	while (strcmp(prompt,"Bye")!=0)
-    	{ // Loop until we receive "Bye"
-
-    		if(button_pushed)
-    		{
-	    		write(fd,pushed,strlen(pushed));
-	    		button_pushed=0;
-	    	}
-
-    		prompt_index = 0;
-    		prompt[0] = '\0';
-    		prompt_len = read(fd, prompt, 128);
-    		if(DEBUG && prompt_len > 0)
-    		{
-    			printf("No. chars received:%d\n",prompt_len);
-    			printf("Message:%s\n", prompt);
-    		}
-//    		while(serial_char != '\0')
-//    		{
-//    			if(button_pushed)
-//    			{
-//    				fprintf(fp,"%s","PUSHED THE BUTTON!");
-//    				button_pushed=0;
-//    			}
-//    		// while((serial_char = getc(fp))!='\n') {
-//    			//strcat(prompt,&serial_char);
-//    			prompt[prompt_index++] = serial_char;
-//    			fprintf(fp,"%c",serial_char);
-//    			printf("%c", serial_char);
-//    			fread(&serial_char,1,1,fp);
-//    		}
-//    		prompt[prompt_index++] = serial_char;
-//    		printf(prompt);
-    		write(fd, prompt, strlen(prompt));
-    	}
-    	write(fd, later_gator, strlen(later_gator));
-    	if(DEBUG)
+    // main section
+    while (1) {
+    	if(button_pushed)
     	{
-    		printf(later_gator);
-    		printf("Closing file.\n");
+    		serial_write(de22pi_rs232, PUSH_MSG);
+    		button_pushed=0;
+    		char_lcd_clear();
     	}
-    	close(fd);
+    	if(de22pi_rs232->msg_read) {
+    		alt_up_character_lcd_string(de2_lcd, de22pi_rs232->read_message);
+    		de22pi_rs232->msg_read = 0;
+    	}
     }
-    else if(DEBUG)
-    	printf("Can't open.\n");
     return 0;
 }

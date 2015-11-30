@@ -144,6 +144,7 @@ ELF := de22pi.elf
 # Paths to C, C++, and assembly source files.
 C_SRCS += serial.c
 C_SRCS += PatientBoard.c
+C_SRCS += timer.c
 CXX_SRCS :=
 ASM_SRCS :=
 

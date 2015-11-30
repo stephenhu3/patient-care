@@ -21,8 +21,10 @@
 
 #include "alt_types.h"
 #include "altera_avalon_pio_regs.h"
+#include "altera_avalon_timer.h"
+#include "sys/alt_alarm.h"
+
 #include "altera_up_avalon_character_lcd.h"
-#include "altera_avalon_timer_regs.h"
 #include "PatientBoard.h"
 #include "sys/alt_irq.h"
 #include "system.h"
@@ -51,13 +53,6 @@ void push_isr(void * context, alt_u32 id)
 	}
 	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(KEYS_BASE, 0x0);
 	alt_irq_enable_all(cpu_sr);
-}
-
-// once null has been reached, read string up until that point to process
-// the string, and then clear the memory? increment the counter?
-void process_string()
-{
-	// TODO: implement
 }
 
 // write the message to the shared memory so that the PI can read the response
@@ -101,14 +96,10 @@ int push_LCD_init(alt_up_character_lcd_dev* tutorial_lcd)
     return 0;
 }
 
-void init_push_irq() {
+void init_push_irq(void * function) {
 	IOWR_ALTERA_AVALON_PIO_IRQ_MASK(KEYS_BASE, 0x1);
 	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(KEYS_BASE, 0x0);
-	alt_irq_register((alt_u32)KEYS_IRQ, NULL, push_isr);
-}
-
-void init_timer_irq() {
-
+	alt_irq_register((alt_u32)KEYS_IRQ, NULL, function);
 }
 
 int main()
@@ -119,8 +110,10 @@ int main()
 	//
 	// alt_irq_register( (alt_u32)UART_0_IRQ, NULL, process_Serial );
     //alt_up_character_lcd_dev* de2_lcd = alt_up_character_lcd_open_dev(CHARACTER_LCD_0_NAME);
+
+
     int fd = open(RS232_0_0_NAME, O_NONBLOCK | O_RDWR); //Open file for reading and writing
-    init_push_irq();
+    init_push_irq(push_isr);
     int prompt_len = 0;
     char prompt[256] = "";
     int prompt_index = 0;

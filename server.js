@@ -241,6 +241,7 @@ router.route('/prescriptions')
         var prescription = new Prescription();      // create a new instance of the Prescription model
         prescription.alert_assigned = req.body.alert_assigned;
         prescription.instructions = req.body.instructions;
+        prescription.num_dosages = req.body.num_dosages;
         prescription.alert_assigned = req.body.alert_assigned;
 
         // save the prescription and check for errors
@@ -282,6 +283,7 @@ router.route('/prescriptions/:prescription_id')
             // set attributes if they're defined in the PUT request
 		    prescription.alert_assigned = req.body.alert_assigned ? req.body.alert_assigned : prescription.alert_assigned;
 	        prescription.instructions = req.body.instructions ? req.body.instructions : prescription.instructions;
+            prescription.num_dosages = req.body.num_dosages ? req.body.num_dosages : prescription.num_dosages;
 	        prescription.alert_assigned = req.body.alert_assigned ? req.body.alert_assigned : prescription.alert_assigned;
 
             // save the prescription

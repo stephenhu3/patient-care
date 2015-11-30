@@ -457,9 +457,9 @@ router.route('/alerts/:alert_id')
 // ----------------------------------------------------
 router.route('/patienthistory')
 
-    // create a patientHistory (accessed at POST http://localhost:8080/api/patientHistorys)
+    // create a patientHistory (accessed at POST http://localhost:8080/api/patientHistory)
     .post(function(req, res) {
-        var patientHistory = new PatientHistory();      // create a new instance of the PatientHistory model
+        var patientHistory = new PatientHistory(); // create a new instance of the PatientHistory model
         patientHistory.taken = req.body.taken;
         patientHistory.patient_assigned = req.body.patient_assigned;
         patientHistory.alert_assigned = req.body.alert_assigned;
@@ -474,30 +474,30 @@ router.route('/patienthistory')
         
     })
 
-    // get all the patientHistorys (accessed at GET http://localhost:8080/api/patientHistorys)
+    // get all the patientHistorys (accessed at GET http://localhost:8080/api/patientHistory)
     .get(function(req, res) {
-        PatientHistory.find(function(err, patientHistorys) {
+        PatientHistory.find(function(err, patientHistory) {
             if (err)
                 res.send(err);
-            res.json(patientHistorys);
+            res.json(patientHistory);
         });
     });
 
 router.route('/patienthistory/:patienthistory_id')
 
-    // get the patientHistory with that id (accessed at GET http://localhost:8080/api/patientHistorys/:patientHistory_id)
+    // get the patienthistory with that id (accessed at GET http://localhost:8080/api/patienthistory/:patienthistory_id)
     .get(function(req, res) {
-        PatientHistory.findById(req.params.patientHistory_id, function(err, patientHistory) {
+        PatientHistory.findById(req.params.patienthistory_id, function(err, patientHistory) {
             if (err)
                 res.send(err);
             res.json(patientHistory);
         });
     })
 
-    // update the patientHistory with this id (accessed at PUT http://localhost:8080/api/patientHistorys/:patientHistory_id)
+    // update the patienthistory with this id (accessed at PUT http://localhost:8080/api/patienthistory/:patienthistory_id)
     .put(function(req, res) {
-        // use our patientHistory model to find the patientHistory we want
-        PatientHistory.findById(req.params.patientHistory_id, function(err, patientHistory) {
+        // use our patienthistory model to find the patienthistory we want
+        PatientHistory.findById(req.params.patienthistory_id, function(err, patientHistory) {
             if (err)
                 res.send(err);
 
@@ -507,7 +507,7 @@ router.route('/patienthistory/:patienthistory_id')
             patientHistory.alert_assigned = req.body.alert_assigned ? req.body.alert_assigned : patientHistory.alert_assigned;
             patientHistory.date = req.body.date ? req.body.date : patientHistory.date;
 
-            // save the patientHistory
+            // save the patienthistory
             patientHistory.save(function(err) {
                 if (err)
                     res.send(err);
@@ -517,10 +517,10 @@ router.route('/patienthistory/:patienthistory_id')
         });
     })
 
-    // delete the patientHistory with this id (accessed at DELETE http://localhost:8080/api/patientHistorys/:patientHistory_id)
+    // delete the patienthistory with this id (accessed at DELETE http://localhost:8080/api/patienthistorys/:patienthistory_id)
     .delete(function(req, res) {
         PatientHistory.remove({
-            _id: req.params.patientHistory_id
+            _id: req.params.patienthistory_id
         }, function(err, patientHistory) {
             if (err)
                 res.send(err);

@@ -7,7 +7,7 @@ import json
 import time
 import datetime
 from prescription import PiPrescription
-import gpio_comm
+from prescription import PiAlert
 import requests
 
 TEN_MINUTES = 600
@@ -54,10 +54,13 @@ class PiRestClient(object):
 
         if prescriptions:
             for prescription in prescriptions:
+                print prescription['alert_assigned']
                 alerts_assigned = self.get_alerts(prescription['alert_assigned'])
                 medication_name = self.get_medication_name(prescription['medication_assigned'])
                 instructions = prescription['instructions']
-                pi_prescription = PiPrescription(alerts_assigned, medication_name, instructions)
+                num_dosages = prescription['num_dosages']
+                prescription_id = prescription['_id']
+                pi_prescription = PiPrescription(prescription_id, alerts_assigned, medication_name, instructions, num_dosages)
                 # print pi_prescription.medication_name + ": " + pi_prescription.instructions + " AT " + str(pi_prescription.alerts[0])
                 pi_prescriptions.append(pi_prescription)
 
@@ -67,17 +70,44 @@ class PiRestClient(object):
         currentDayString = datetime.date.today().strftime("%A")
         alerts = []
 
+        print currentDayString
+
         for alert_id in alert_ids:
-            alert = requests.get(self.server + '/alert/{0}'.format(alert_id))
-            tempPiAlert = PiAlert(alert["hour"], alert["timeout"], alert["schedule"])
+            alert = requests.get(self.server + '/alerts/{0}'.format(alert_id))
+            jsonAlert = alert.json()
 
-            alerts.append(tempPiAlert)
+            if jsonAlert["schedule"][currentDayString]:
+                tempPiAlert = PiAlert(jsonAlert["hour"], jsonAlert["timeout"], alert_id)
+                print tempPiAlert.alert_id + ": (Hour: " + str(tempPiAlert.hour) + ") (Timeout: " + str(tempPiAlert.timeout) + ")"  
+                alerts.append(tempPiAlert)
 
-        return alerts    
+        return alerts
+
+    def decriment_dosages(self, pi_prescription):
+        print "Decrimenting " + pi_prescription.prescription_id + " before - " + str(pi_prescription.num_dosages)
+
+        pi_prescription.num_dosages = pi_prescription.num_dosages - 1
+
+        payload = {'num_dosages': pi_prescription.num_dosages}
+
+        requests.put(self.server + '/prescriptions/{0}'.format(pi_prescription.prescription_id), data=payload)
+
+    def post_history(self, patient_assigned, alert_assigned, taken):
+        payload = {'patient_assigned': patient_assigned,
+                   'alert_assigned': alert_assigned,
+                   'taken': taken,
+                   'date': str(datetime.datetime.now())}
+        headers = {'content-type': 'application/json'}
+
+        r = requests.post(self.server + '/patientHistory', data=json.dumps(payload), headers=headers)
+
+        print str(r.status_code) + str(r.reason)
 
 
 def run(patient_id):
     client = PiRestClient()
+    # serial_comm = PiSerialComm()
+
     start = time.time()
     pi_prescriptions = client.get_pi_prescriptions(patient_id)
     
@@ -92,43 +122,48 @@ def run(patient_id):
             pi_prescriptions = client.get_pi_prescriptions(patient_id)
             start = time.time()
 
-        # Check the alert times
+        # Iterate through prescriptions
         for pi_prescription in pi_prescriptions:
-            alert_index = 0
-            while alert_index < len(pi_prescription.alerts):
-                # Alert is triggered, do something
-                if pi_prescription.triggered[alert_index] == 0 and hour == pi_prescription.alerts[alert_index]:
-                    print str(hour)
-                    print pi_prescription.medication_name + ': ' + pi_prescription.instructions
-                    pi_prescription.triggered[alert_index] = 1
-                    gpio_comm.run()
-                    requests.put(client.server + '/patients/{0}'.format(patient_id), data={'medication_taken':'true'})
+            # Iterate through alters in prescriptions
+            for alert in pi_prescription.alerts:
+                # If it is time for the alert to be sent, the alert has not already been sent, and it is not past the timeout
+                if hour >= alert.hour and not alert.sent and not alert.past_timeout:
+                    # If the timeout period has passed
+                    if alert.hour * 60 + alert.timeout < (datetime.datetime.now().minute % 10)*60 + datetime.datetime.now().second:
+                        print alert.alert_id + ": Timeout Passed"
+                        alert.past_timeout = True
+                        client.post_history(patient_id, alert.alert_id, False)
 
-                if pi_prescription.triggered[alert_index] == 1 and hour == 0:
-                    pi_prescription.triggered[alert_index] = 0;
+                    # Trigger sending the instructions to the DE2
+                    else:
+                        print "Alert sent: " + alert.alert_id
 
-                alert_index += 1
+                        alert.sent = True
+                        
+                        minutes_before_timeout = alert.hour * 60 + alert.timeout - (datetime.datetime.now().minute % 10)*60 - datetime.datetime.now().second
+                        
+                        # serial_comm.writeline(pi_prescription.medication_name + ": " + pi_prescription.instructions)
+                        # triggered = serial_comm.waitForResponse(minutes_before_timeout)
 
-def webClientRealTimeTest(patient_id):
-    client = PiRestClient()
-    start = time.time()
-    flag = True;
-    payload1 = { 'medication_taken':'false'}
-    payload2 = { 'medication_taken':'false'}
+                        startSend = time.time()
 
-    while True:
-        if time.time() - start >= 10:
-            start = time.time()
+                        time.sleep(15)
 
-            if flag:
-                requests.put(client.server + '/patients/{0}'.format(patient_id), data=payload1)
-                print "true"
-                flag = False
+                        triggered = False
 
-            else:
-                requests.put(client.server + '/patients/{0}'.format(patient_id), data=payload2)
-                print "false"
-                flag = True
+                        if time.time() - startSend < minutes_before_timeout:
+                            triggered = True
+
+                        if(triggered):
+                            print "Alert triggered: " + alert.alert_id
+                            alert.triggered = True
+                            client.decriment_dosages(pi_prescription)
+                            client.post_history(patient_id, alert.alert_id, True)
+
+                        else:
+                            print "Alert passed timeout: " + alert.alert_id
+                            alert.past_timeout = True
+                            client.post_history(patient_id, alert.alert_id, False)
 
 
 
@@ -136,5 +171,3 @@ if __name__ == '__main__':
     patient_id = "5645227e3fc36e1100149818"
 
     run(patient_id)
-
-    # webClientRealTimeTest(patient_id)

@@ -18,18 +18,24 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "assert.h"
 #include "alt_types.h"
 #include "altera_avalon_pio_regs.h"
-#include "altera_avalon_timer.h"
+#include "altera_avalon_timer_regs.h"
+#include "timer.h"
 #include "altera_up_avalon_character_lcd.h"
-#include "sys/alt_alarm.h"
+//#include "sys/alt_alarm.h"
 #include "sys/alt_irq.h"
 #include "system.h"
+//#include "altera_up_avalon_audio_and_video_config.h"
+//#include "altera_up_avalon_audio.h"
+#include "altera_up_avalon_video_pixel_buffer_dma.h"
+#include "altera_up_avalon_video_character_buffer_with_dma.h"
 
 #include "PatientBoard.h"
 #include "serial.h"
 
-#define DEBUG 1
+#define DEBUG 0
 
 #define BLANK_LINE "                " // something is here don't touch!
 #define BASE_DEMO_DIR 0xFFFFFFFC // most pins don't matter but last eight need to be
@@ -41,7 +47,7 @@
 #define PERIOD_MINUTES 1
 #define PERIOD_SECONDS PERIOD_MINUTES * 60
 #define PUSH_DONE 3
-#define PUSH_MSG "Medicine taken"
+#define PUSH_MSG "K"
 
 int state = WAIT_PI;
 int state_changed = 1;
@@ -55,13 +61,8 @@ void push_isr(void * context, alt_u32 id)
 		button_pushed=1;
 	}
 	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(KEYS_BASE, 0x0);
+	alt_irq_disable(KEYS_IRQ);
 	alt_irq_enable_all(cpu_sr);
-}
-
-// write the message to the shared memory so that the PI can read the response
-void write_message()
-{
-	// TODO: implement
 }
 
 int print_push_button(alt_up_character_lcd_dev* de2_lcd) {
@@ -103,54 +104,56 @@ void init_push_irq(void * function) {
 	IOWR_ALTERA_AVALON_PIO_IRQ_MASK(KEYS_BASE, 0x1);
 	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(KEYS_BASE, 0x0);
 	alt_irq_register((alt_u32)KEYS_IRQ, NULL, function);
+	alt_irq_disable(KEYS_IRQ);
 }
 
 int main()
 {
-	// when display needs to be updated, do so (see string that's sent)
-	// alt_irq_register( (alt_u32)UART_0_IRQ, NULL, process_Serial );
 	// setup
+	alt_up_pixel_buffer_dma_dev* pixel_buffer;
+	alt_up_char_buffer_dev *char_buffer;
+	char_buffer = alt_up_char_buffer_open_dev("/dev/video_character_buffer_with_dma_0");
+	assert(char_buffer);
+	pixel_buffer = alt_up_pixel_buffer_dma_open_dev(VIDEO_PIXEL_BUFFER_DMA_0_NAME);
+	assert(pixel_buffer);
     alt_up_character_lcd_dev* de2_lcd = alt_up_character_lcd_open_dev(CHARACTER_LCD_0_NAME);
-	alt_alarm * serial_alarm;
-	serial * de22pi_rs232 = initialize_serial(RS232_0_0_BASE, RS232_0_0_NAME,
+    assert(de2_lcd);
+    serial * de22pi_rs232 = initialize_serial(RS232_0_0_BASE, RS232_0_0_NAME,
 			RS232_0_0_IRQ, RS232_0_0_IRQ_INTERRUPT_CONTROLLER_ID);
-	if(de22pi_rs232 == NULL && DEBUG) {
+    assert(de22pi_rs232);
+	if(de22pi_rs232 == NULL) {
 		printf("Serial initialisation for %s failed.\n", RS232_0_0_NAME);
 		printf("Exiting...\n");
 		return -1;
 	}
 
-	int errno;
-	if((errno = alt_alarm_start(serial_alarm, PERIOD_SECONDS * TIMER_0_FREQ,
-			serial_read, (void *) de22pi_rs232))== 0)
-	{
-		// somebody set us up the bomb #zerowing
-		// the alarm is set up. properly so we
-		alt_avalon_timer_sc_init(TIMER_0_BASE,
-				TIMER_0_IRQ_INTERRUPT_CONTROLLER_ID,
-				TIMER_0_IRQ,
-				TIMER_0_FREQ);
-	}
-	else if (DEBUG)
-	{
-		printf("Alarm initialisation failed with error %d.\n", errno);
-		printf("Exiting...\n");
-		return errno;
-	}
+	alt_up_pixel_buffer_dma_change_back_buffer_address(pixel_buffer, SRAM_0_BASE);
+	alt_up_pixel_buffer_dma_swap_buffers(pixel_buffer);
+	while (alt_up_pixel_buffer_dma_check_swap_buffers_status(pixel_buffer));
+	alt_up_pixel_buffer_dma_clear_screen(pixel_buffer, 0);
+
+	init_timer_irq(TIMER_0_BASE, TIMER_0_IRQ, serial_read, (void *) de22pi_rs232, 1);
     init_push_irq(push_isr);
 
     // main section
-    while (1) {
-    	if(button_pushed)
-    	{
-    		serial_write(de22pi_rs232, PUSH_MSG);
-    		button_pushed=0;
-    		char_lcd_clear();
-    	}
-    	if(de22pi_rs232->msg_read) {
-    		alt_up_character_lcd_string(de2_lcd, de22pi_rs232->read_message);
-    		de22pi_rs232->msg_read = 0;
-    	}
+    if(de22pi_rs232)
+    {
+		while (1)
+		{
+			if(button_pushed)
+			{
+				if(DEBUG)
+					printf("%u\n", get_snapshot(TIMER_0_BASE)); // check pointer
+				serial_write(de22pi_rs232, PUSH_MSG);
+				button_pushed=0;
+				char_lcd_clear(de2_lcd);
+			}
+			if(de22pi_rs232->msg_read) {
+				alt_up_character_lcd_string(de2_lcd, de22pi_rs232->read_message);
+				alt_irq_enable(KEYS_IRQ);
+				de22pi_rs232->msg_read = 0;
+			}
+		}
     }
     return 0;
 }

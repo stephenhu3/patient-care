@@ -8,35 +8,22 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "serial.h"
 #include "system.h"
 #include "sys/alt_irq.h"
+#include "altera_avalon_timer_regs.h"
 
-#define DEBUG 1
+#define DEBUG 0
 
-struct serial {
-	// arranged alphabetical order
-	const char * name;
-	int fd;
-	alt_u32 base;
-	alt_u32 IRQ_ctrlr_ID;
-	alt_u32 IRQ_num;
+#define ACKNOWLEDGE "Acknowledged."
 
-	char write_message[256] = ""; // record of last message?
-	char read_message[256] = "";
-	int msg_index = 0;
-	int msg_read = 0;
-};
-
-serial * initialize_serial(alt_u32 base, const char * name, alt_u32 IRQ_num,
-		IRQ_ctrlr_ID) {
-	serial * pi_serial;
+serial * initialize_serial(alt_u32 base, const char * name,
+		int IRQ_num, int IRQ_ctrlr_ID) {
+	serial * pi_serial = malloc(sizeof(pi_serial));
 	pi_serial->fd = open(name, O_NONBLOCK | O_RDWR);
-	if(pi_serial->fd) {
-		return NULL;
-	}
-	else
+	if(pi_serial->fd >= 0)
 	{
 		pi_serial->base = base;
 		pi_serial->IRQ_num = IRQ_num;
@@ -46,23 +33,38 @@ serial * initialize_serial(alt_u32 base, const char * name, alt_u32 IRQ_num,
 }
 
 int serial_write(serial * serial, char * message) {
-	if(serial)
-	// TODO: implement
-	return -1;
+	return write(serial->fd, message, strlen(message));
 }
 
 void * serial_read(void * context, alt_u32 id) {
+	alt_irq_context cpu_sr;
+	cpu_sr = alt_irq_disable_all();
+	IOWR_ALTERA_AVALON_TIMER_STATUS(TIMER_0_BASE, 0x0);
 	serial * de22pi_serial = (serial *) context;
-	char * later_gator = "See you later, alligator!\n";
-	char * pushed = "PUSHED THE BUTTON!";
-	if (de22pi_serial->fd) // file exists
+	if (de22pi_serial->fd >=0) // file exists
 	{
-		if((de22pi_serial->msg_index = read(de22pi_serial, (void *) de22pi_serial->read_message, 1000)))
+		char temp_msg[MSG_LEN];
+		int num_read;
+		num_read = read(de22pi_serial->fd, (void *) temp_msg, MSG_LEN);
+		if(num_read > 0)
+		{
+			printf("I read something.\n");
 			de22pi_serial->msg_read = 1;
-		if(DEBUG)
-			write(de22pi_serial->fd, de22pi_serial->read_message, de22pi_serial->msg_index);
+			de22pi_serial->msg_index = num_read+1;
+			strncpy(de22pi_serial->read_message, temp_msg, num_read);
+			de22pi_serial->read_message[num_read] = '\0';
+			if(DEBUG)
+				write(de22pi_serial->fd, de22pi_serial->read_message, de22pi_serial->msg_index);
+			printf("%s\n", de22pi_serial->read_message);
+			// write(de22pi_serial->fd, ACKNOWLEDGE, strlen(ACKNOWLEDGE));
+		}
+		alt_irq_enable_all(cpu_sr);
 		return (void *) de22pi_serial;
 	}
-	else // things didn't work
+	else
+	{// things didn't work
+		printf("File descriptor less than 0.\n");
+		alt_irq_enable_all(cpu_sr);
 		return context;
+	}
 }

@@ -21,7 +21,7 @@ class PiSerialComm(object):
 		start = time.time()
 
 		while time.time() - start < timeout:
-			message =  self.readline
+			message =  self.readline()
 			if message != '':
 				print message
 				return True

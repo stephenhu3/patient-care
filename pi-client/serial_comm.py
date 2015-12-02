@@ -21,6 +21,8 @@ class PiSerialComm(object):
 	def waitForResponse(self, timeout):
 		start = time.time()
 
+		print "Timeout: " + str(timeout)
+
 		while time.time() - start < timeout:
 			message =  self.readline()
 			if message != '':

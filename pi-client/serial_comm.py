@@ -15,6 +15,7 @@ class PiSerialComm(object):
 		return out
 
 	def writeline(self, line):
+		print line
 		self.port.write(line)
 
 	def waitForResponse(self, timeout):

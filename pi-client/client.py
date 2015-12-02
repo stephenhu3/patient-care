@@ -107,7 +107,7 @@ class PiRestClient(object):
 
 def run(patient_id):
     client = PiRestClient()
-    # serial_comm = PiSerialComm()
+    serialComm = PiSerialComm()
 
     start = time.time()
     pi_prescriptions = client.get_pi_prescriptions(patient_id)
@@ -143,8 +143,8 @@ def run(patient_id):
                         
                         minutes_before_timeout = alert.hour * 60 + alert.timeout - (datetime.datetime.now().minute % 10)*60 - datetime.datetime.now().second
                         
-                        serial_comm.writeline(pi_prescription.medication_name + ": " + pi_prescription.instructions)
-                        triggered = serial_comm.waitForResponse(minutes_before_timeout)
+                        serialComm.writeline(pi_prescription.medication_name + ": " + pi_prescription.instructions)
+                        triggered = serialComm.waitForResponse(minutes_before_timeout)
 
                         # startSend = time.time()
 

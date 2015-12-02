@@ -16,6 +16,7 @@
 #include "altera_avalon_timer_regs.h"
 
 #define DEBUG 0
+#define TIMEOUT "&"
 
 #define ACKNOWLEDGE "Acknowledged."
 
@@ -46,13 +47,16 @@ void * serial_read(void * context, alt_u32 id) {
 		char temp_msg[MSG_LEN];
 		int num_read;
 		num_read = read(de22pi_serial->fd, (void *) temp_msg, MSG_LEN);
+		temp_msg[num_read++] = '\0';
 		if(num_read > 0)
 		{
 			printf("I read something.\n");
 			de22pi_serial->msg_read = 1;
-			de22pi_serial->msg_index = num_read+1;
+			if(strcmp(temp_msg,TIMEOUT) == 0) {
+				de22pi_serial->timeout = 1;
+			}
+			de22pi_serial->msg_index = num_read;
 			strncpy(de22pi_serial->read_message, temp_msg, num_read);
-			de22pi_serial->read_message[num_read] = '\0';
 			if(DEBUG)
 				write(de22pi_serial->fd, de22pi_serial->read_message, de22pi_serial->msg_index);
 			printf("%s\n", de22pi_serial->read_message);

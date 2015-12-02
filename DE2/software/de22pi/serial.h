@@ -14,7 +14,7 @@
 #include "alt_types.h"
 
 #define TIMER_MODE 0
-#define MSG_LEN 256
+#define MSG_LEN 512
 
 typedef struct serial {
 	// arranged alphabetical order
@@ -24,6 +24,7 @@ typedef struct serial {
 	alt_u32 IRQ_ctrlr_ID;
 	alt_u32 IRQ_num;
 
+	int timeout;
 	char write_message[MSG_LEN]; // record of last message?
 	char read_message[MSG_LEN];
 	int msg_index;

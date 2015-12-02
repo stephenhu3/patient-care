@@ -132,7 +132,7 @@ int main()
 	while (alt_up_pixel_buffer_dma_check_swap_buffers_status(pixel_buffer));
 	alt_up_pixel_buffer_dma_clear_screen(pixel_buffer, 0);
 
-	init_timer_irq(TIMER_0_BASE, TIMER_0_IRQ, serial_read, (void *) de22pi_rs232, 1);
+	init_timer_irq(TIMER_0_BASE, TIMER_0_IRQ, serial_read, (void *) de22pi_rs232, 10);
     init_push_irq(push_isr);
 
     // main section
@@ -149,8 +149,20 @@ int main()
 				char_lcd_clear(de2_lcd);
 			}
 			if(de22pi_rs232->msg_read) {
-				alt_up_character_lcd_string(de2_lcd, de22pi_rs232->read_message);
-				alt_irq_enable(KEYS_IRQ);
+				if(de22pi_rs232->timeout) {
+					// clear VGA
+					char_lcd_clear(de2_lcd);
+					alt_irq_disable(KEYS_IRQ);
+					de22pi_rs232->timeout = 0;
+				}
+				else
+				{
+					// print value onto VGA
+					char_lcd_clear(de2_lcd);
+					alt_up_character_lcd_set_cursor_pos(de2_lcd, 0, 0);
+					alt_up_character_lcd_string(de2_lcd, de22pi_rs232->read_message);
+					alt_irq_enable(KEYS_IRQ);
+				}
 				de22pi_rs232->msg_read = 0;
 			}
 		}

@@ -11,7 +11,7 @@ from prescription import PiAlert
 from serial_comm import PiSerialComm
 import requests
 
-TEN_MINUTES = 600
+TEN_MINUTES = 60
 true = True
 false = False
 

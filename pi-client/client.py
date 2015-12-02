@@ -8,6 +8,7 @@ import time
 import datetime
 from prescription import PiPrescription
 from prescription import PiAlert
+from serial_comm import PiSerialComm
 import requests
 
 TEN_MINUTES = 600
@@ -142,17 +143,15 @@ def run(patient_id):
                         
                         minutes_before_timeout = alert.hour * 60 + alert.timeout - (datetime.datetime.now().minute % 10)*60 - datetime.datetime.now().second
                         
-                        # serial_comm.writeline(pi_prescription.medication_name + ": " + pi_prescription.instructions)
-                        # triggered = serial_comm.waitForResponse(minutes_before_timeout)
+                        serial_comm.writeline(pi_prescription.medication_name + ": " + pi_prescription.instructions)
+                        triggered = serial_comm.waitForResponse(minutes_before_timeout)
 
-                        startSend = time.time()
+                        # startSend = time.time()
 
-                        time.sleep(15)
+                        # triggered = False
 
-                        triggered = False
-
-                        if time.time() - startSend < minutes_before_timeout:
-                            triggered = True
+                        # if time.time() - startSend < minutes_before_timeout:
+                        #     triggered = True
 
                         if(triggered):
                             print "Alert triggered: " + alert.alert_id

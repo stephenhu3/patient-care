@@ -29,6 +29,7 @@ class PiSerialComm(object):
 				print message
 				return True
 
+		self.writeline('&')
 		return False
 
 if __name__ == '__main__':

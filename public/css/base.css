@@ -19,8 +19,16 @@ h1 {
   margin-left: -8px;
 }
 
+.instructions h4{
+  margin-top: 5px;
+}
+
 .instructions {
-  margin-bottom: 15px;
+  margin-bottom: 10px;
+}
+
+.activeIngredient {
+  margin-bottom: 15px; 
 }
 
 .alertSchedule {
@@ -29,4 +37,8 @@ h1 {
 
 .alertTimeout {
   margin-bottom: 0px;
+}
+
+.prescriptionId{
+  font-size: 2px;
 }

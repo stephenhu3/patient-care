@@ -3,8 +3,6 @@
     <head>
         <meta charset="utf-8">
         <title>Patient Care Monitoring System</title>
-        <!-- Not present in the tutorial. Just for basic styling. -->
-        
         <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.0/react.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.0/react-dom.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.6.15/browser.js"></script>
@@ -40,7 +38,6 @@
                 apiUrl: "https://patient-care-rest.herokuapp.com/api"
             }
             
-            // tutorial7.js
             var Patient = React.createClass({
                 getInitialState: function() {
                     return {
@@ -90,28 +87,23 @@
                             <h4 className="patientCaretakerAssigned">
                                 <Glyphicon glyph="eye-open" /> Assigned Caretaker: {this.state.caretakerFirstName} {this.state.caretakerLastName}
                             </h4>
-                            <h4 className="patientMedicationTaken">
-                                Medication Status: {this.medTaken()}
-                            </h4>
                             <span dangerouslySetInnerHTML={this.rawMarkup()} />
                         </div>
                     );
                 }
             });
 
-            // tutorial10.js
             var PatientList = React.createClass({
                 render: function() {
                     var patientNodes = this.props.data.map(function (patient) {
                         return (
-                            <div key={patient}>
-                                <Patient first_name={patient.first_name} last_name={patient.last_name} age={patient.age} phone={patient.phone} medication_taken={patient.medication_taken} caretaker_assigned={patient.caretaker_assigned}>
+                            <div>
+                                <Patient key={patient._id} first_name={patient.first_name} last_name={patient.last_name} age={patient.age} phone={patient.phone} medication_taken={patient.medication_taken} caretaker_assigned={patient.caretaker_assigned}>
                                     {/*TODO: strange behaviour: this needs to be removed, but if it is, causes several exceptions,
                                     could be due to lack of unique key prop*/}
-                                    {patient.prescription_assigned}
+                                    Prescription ID: {patient.prescription_assigned}
                                 </Patient>
-                                <AddPrescriptionModal />
-                                <PrescriptionList key={patient} data={patient.prescription_assigned}/>
+                                <PrescriptionList data={patient.prescription_assigned}/>
                             </div>
                         );
                     });
@@ -123,7 +115,6 @@
                 }
             });
 
-            // tutorial18.js
             var PatientForm = React.createClass({
                 handleSubmit: function(e) {
                     e.preventDefault();
@@ -149,7 +140,6 @@
                 }
             });
 
-            // tutorial20.js
             var PatientBox = React.createClass({
                 loadPatientsFromServer: function() {
                     $.ajax({
@@ -220,7 +210,8 @@
                             $.get(medicationEndpoint, function(result) {
                                 if (this.isMounted()) {
                                     this.setState({
-                                        medicationName: result.name
+                                        medicationName: result.name,
+                                        active_ingredient: result.active_ingredient
                                     });
                                 }
                             }.bind(this));
@@ -236,10 +227,14 @@
                 render: function() {
                     return (
                         <div class="medication">
-                        <Panel bsStyle="primary" header={<h3 class="medicationHeader">Assigned Medication: {this.state.medicationName}</h3>}>
-                                <h4>Instructions:</h4>
+                        <Panel bsStyle="primary" header={<h3 class="medicationHeader">Prescription: {this.state.medicationName}</h3>}>
                                 <div className="instructions">
+                                    <h4>Instructions:</h4>
                                     {this.state.instructions}
+                                </div>
+                                <h4>Active Ingredient:</h4>
+                                <div className="activeIngredient">
+                                    {this.state.active_ingredient}
                                 </div>
                             <AlertList data={this.state.alert_assigned}></AlertList>
                         </Panel>
@@ -249,17 +244,115 @@
             });
 
             var PrescriptionList = React.createClass({
+                handlePrescriptionSubmit: function(prescription) {
+                    // prescription contains info for medication, alert, and prescription info
+                    // need to create each and assign to appropriate fields (dependencies exist)
+                    // 1. create the alert
+                    // 2. get the alert's id
+                    // 3. search by medication name, if existing, get its id
+                    // 4. if not existing, create new medication, get its id
+                    // 5. create the prescription, get its id
+                    // 6. assign the medication to the prescription
+                    // 7. assign the alert to the prescription
+                    // 8. assign the prescription to the alert
+
+                    console.log(prescription);
+                    // var medicationData = {
+                    //     name: prescription.name
+                    //     // TODO: add active ingredient
+                    //     // , active_ingredient: String
+                    // },
+                    // var prescriptionData = {
+                    //     // need to get created medication's ID first
+                    //     // medication_assigned: String,
+                    //     instructions: prescription.instructions,
+                    //     // TODO: add num_dosages
+                    //     // num_dosages: Number,
+                    //     // TODO need to get created alerts' IDs first
+                    //     // alert_assigned: [String]
+                    // },
+                    // var alertJSON = {
+                    //     hour: Number,
+                    //     timeout: Number,
+                    //     schedule: {
+                    //         "Monday": Boolean,
+                    //         "Tuesday": Boolean,
+                    //         "Wednesday": Boolean,
+                    //         "Thursday": Boolean,
+                    //         "Friday": Boolean,
+                    //         "Saturday": Boolean,
+                    //         "Sunday": Boolean
+                    //     },
+                    //     prescription_assigned: String
+                    // }
+                    // // var patients = this.state.data;
+                    // // var newPatients = patients.concat([patient]);
+                    // // this.setState({data: prescription});
+                    // $.ajax({
+                    //     url: this.props.apiUrl + "/alerts",
+                    //     dataType: 'json',
+                    //     type: 'POST',
+                    //     data: prescription,
+                    //     success: function(data) {
+                    //         // this.setState({data: data});
+                    //     }.bind(this),
+                    //     error: function(xhr, status, err) {
+                    //         console.error(url, status, err.toString());
+                    //     }.bind(this)
+                    // });
+
+                    // $.ajax({
+                    //     url: this.props.apiUrl + "/medications",
+                    //     dataType: 'json',
+                    //     type: 'POST',
+                    //     data: prescription,
+                    //     success: function(data) {
+                    //         // this.setState({data: data});
+                    //     }.bind(this),
+                    //     error: function(xhr, status, err) {
+                    //         console.error(url, status, err.toString());
+                    //     }.bind(this)
+                    // });
+
+                    // $.ajax({
+                    //     url: this.props.apiUrl + "/prescriptions",
+                    //     dataType: 'json',
+                    //     type: 'POST',
+                    //     data: prescription,
+                    //     success: function(data) {
+                    //         // this.setState({data: data});
+                    //     }.bind(this),
+                    //     error: function(xhr, status, err) {
+                    //         console.error(url, status, err.toString());
+                    //     }.bind(this)
+                    // });
+
+                    // $.ajax({
+                    //     url: this.props.apiUrl + "/patients",
+                    //     dataType: 'json',
+                    //     type: 'POST',
+                    //     data: prescription,
+                    //     success: function(data) {
+                    //         // this.setState({data: data});
+                    //     }.bind(this),
+                    //     error: function(xhr, status, err) {
+                    //         console.error(url, status, err.toString());
+                    //     }.bind(this)
+                    // });
+                },
+
                 render: function() {
 
                 var prescriptionNodes = this.props.data.map(function (prescription) {
                         return (
-                            <Prescription key={prescription} data={prescription}>
+                            <Prescription key={prescription._id} data={prescription}>
                             </Prescription>
                         );
                     });
 
                     return (
                         <div className="prescriptionList">
+                            <PrescriptionForm onPrescriptionSubmit={this.handlePrescriptionSubmit} />
                             {prescriptionNodes}
                         </div>
                     );
@@ -331,7 +424,7 @@
                 render: function() {
                     var alertNodes = this.props.data.map(function (alert) {
                         return (
-                            <Alert key={alert} data={alert}>
+                            <Alert key={alert._id} data={alert}>
                             </Alert>
                         );
                     });
@@ -344,92 +437,132 @@
                 }
             });
 
-            var AddPrescriptionModal = React.createClass({
+            var PrescriptionForm = React.createClass({
+                handleChange: function() {
+                    this.setState({
+                        name: this.refs.name.getValue(),
+                        instructions: this.refs.instructions.getValue(),
+                        active_ingredient: this.refs.active_ingredient.getValue(),
+                        num_dosages: this.refs.num_dosages.getValue(),
+                        hour: this.refs.hour.getValue(),
+                        scheduleMon: this.refs.scheduleMon.getChecked(),
+                        scheduleTues: this.refs.scheduleTues.getChecked(),
+                        scheduleWed: this.refs.scheduleWed.getChecked(),
+                        scheduleThurs: this.refs.scheduleThurs.getChecked(),
+                        scheduleFri: this.refs.scheduleFri.getChecked(),
+                        scheduleSat: this.refs.scheduleSat.getChecked(),
+                        scheduleSun: this.refs.scheduleSun.getChecked()
+                    });
+                },
 
-              getInitialState() {
-                return { showModal: false };
-              },
+                handleSubmit: function(e) {
+                    this.props.onPrescriptionSubmit({
+                        name: this.state.name,
+                        instructions: this.state.instructions,
+                        active_ingredient: this.state.active_ingredient,
+                        num_dosages: this.state.num_dosages,
+                        hour: this.state.hour,
+                        scheduleMon: this.state.scheduleMon,
+                        scheduleTues: this.state.scheduleTues,
+                        scheduleWed: this.state.scheduleWed,
+                        scheduleThurs: this.state.scheduleThurs,
+                        scheduleFri: this.state.scheduleFri,
+                        scheduleSat: this.state.scheduleSat,
+                        scheduleSun: this.state.scheduleSun
+                    });
+                    return;
+                },
 
-              close() {
-                this.setState({ showModal: false });
-              },
+                getInitialState() {
+                    return { showModal: false };
+                },
 
-              open() {
-                this.setState({ showModal: true });
-              },
+                close() {
+                    this.setState({ showModal: false });
+                },
 
-              render() {
-                let popover = <Popover title="popover">very popover. such engagement</Popover>;
-                let resetTooltip = <Tooltip>Reset all the fields of this prescription.</Tooltip>;
-                let submitTooltip = <Tooltip>Submit this prescription for the patient.</Tooltip>;
-                let cancelTooltip = <Tooltip>Cancel this prescription and discard all fields.</Tooltip>;
+                open() {
+                    this.setState({ showModal: true });
+                },
 
-                return (
-                  <div>
-                    <Button
-                      bsStyle="primary"
-                      bsSize="medium"
-                      className="addPrescriptionBtn"
-                      onClick={this.open}
-                    >
-                    <Glyphicon glyph="plus" className="addPrescriptionGlyph"/>   Add Prescription
-                    </Button>
+                render() {
+                    let resetTooltip = <Tooltip>Reset all the fields of this prescription.</Tooltip>;
+                    let submitTooltip = <Tooltip>Submit this prescription for the patient.</Tooltip>;
+                    let cancelTooltip = <Tooltip>Cancel this prescription and discard all fields.</Tooltip>;
 
-                    <Modal show={this.state.showModal} onHide={this.close}>
-                      <Modal.Header closeButton>
-                        <Modal.Title>Add Prescription</Modal.Title>
-                      </Modal.Header>
-                      <Modal.Body>
-                        <form>
-                        <Input type="text" label="Medication Name" placeholder="Enter medication name" />
-                        <Input type="textarea" label="Instructions" placeholder="Enter dosage instructions" />
-                        <Input label="Schedule" help="Select the days the medication should be taken on" />
-                        <Input type="checkbox" label="Monday"/>
-                        <Input type="checkbox" label="Tuesday"/>
-                        <Input type="checkbox" label="Wednesday"/>
-                        <Input type="checkbox" label="Thursday"/>
-                        <Input type="checkbox" label="Friday"/>
-                        <Input type="checkbox" label="Saturday"/>
-                        <Input type="checkbox" label="Sunday"/>
-                        <Input type="select" help="Select the time the medication should be taken at">
-                          <option value="select">6 AM</option>
-                          <option value="other">7 AM</option>
-                          <option value="other">8 AM</option>
-                          <option value="other">9 AM</option>
-                          <option value="other">10 AM</option>
-                          <option value="other">11 AM</option>
-                          <option value="other">12 PM</option>
-                          <option value="other">1 PM</option>
-                          <option value="other">2 PM</option>
-                          <option value="other">3 PM</option>
-                          <option value="other">4 PM</option>
-                          <option value="other">5 PM</option>
-                          <option value="other">6 PM</option>
-                          <option value="other">7 PM</option>
-                          <option value="other">8 PM</option>
-                          <option value="other">9 PM</option>
-                          <option value="other">10 PM</option>
-                          <option value="other">11 PM</option>
-                          <option value="other">12 AM</option>
-                        </Input>
-                        
-                        <OverlayTrigger overlay={resetTooltip} placement="left">
-                            <ButtonInput type="reset" value="Reset Prescription" />
-                        </OverlayTrigger>
-                        <OverlayTrigger overlay={submitTooltip} placement="left">
-                            <ButtonInput type="submit" value="Enter Prescription" />
-                        </OverlayTrigger>
-                        </form>
-                      </Modal.Body>
-                      <Modal.Footer>
-                        <OverlayTrigger overlay={cancelTooltip} placement="right">
-                            <Button onClick={this.close}>Cancel Prescription</Button>
-                        </OverlayTrigger>
-                      </Modal.Footer>
-                    </Modal>
-                  </div>
-                );
-              }
+                    return (
+                      <div>
+                        <Button
+                          bsStyle="primary"
+                          bsSize="medium"
+                          className="addPrescriptionBtn"
+                          onClick={this.open}
+                        >
+                        <Glyphicon glyph="plus" className="addPrescriptionGlyph"/>   Add Prescription
+                        </Button>
+
+                        <Modal show={this.state.showModal} onHide={this.close}>
+                          <Modal.Header closeButton>
+                            <Modal.Title>Add Prescription</Modal.Title>
+                          </Modal.Header>
+                          <Modal.Body>
+                            <form className="prescriptionForm" onSubmit={this.handleSubmit}>
+                            <Input type="text" label="Medication Name" placeholder="Enter medication name" ref="name" onChange={this.handleChange}/>
+                            <Input type="text" label="Active Ingredient" placeholder="Enter active ingredient" ref="active_ingredient" onChange={this.handleChange}/>
+                            <Input type="number" label="Number of Dosages" placeholder="Enter number of dosages" ref="num_dosages" onChange={this.handleChange}/>
+                            <Input type="textarea" label="Instructions" placeholder="Enter dosage instructions" ref="instructions" onChange={this.handleChange}/>
+                            <Input label="Schedule" help="Select the days the medication should be taken on"/>
+                            <Input type="checkbox" label="Monday" ref="scheduleMon" onChange={this.handleChange}/>
+                            <Input type="checkbox" label="Tuesday" ref="scheduleTues" onChange={this.handleChange}/>
+                            <Input type="checkbox" label="Wednesday" ref="scheduleWed" onChange={this.handleChange}/>
+                            <Input type="checkbox" label="Thursday" ref="scheduleThurs" onChange={this.handleChange}/>
+                            <Input type="checkbox" label="Friday" ref="scheduleFri" onChange={this.handleChange}/>
+                            <Input type="checkbox" label="Saturday" ref="scheduleSat" onChange={this.handleChange}/>
+                            <Input type="checkbox" label="Sunday" ref="scheduleSun" onChange={this.handleChange}/>
+                            <Input type="select" help="Select the time the medication should be taken at" ref="hour" onChange={this.handleChange}>
+                              <option value="0">12 AM</option>
+                              <option value="1">1 AM</option>
+                              <option value="2">2 AM</option>
+                              <option value="3">3 AM</option>
+                              <option value="4">4 AM</option>
+                              <option value="5">5 AM</option>
+                              <option value="6">6 AM</option>
+                              <option value="7">7 AM</option>
+                              <option value="8">8 AM</option>
+                              <option value="9">9 AM</option>
+                              <option value="10">10 AM</option>
+                              <option value="11">11 AM</option>
+                              <option value="12">12 PM</option>
+                              <option value="13">1 PM</option>
+                              <option value="14">2 PM</option>
+                              <option value="15">3 PM</option>
+                              <option value="16">4 PM</option>
+                              <option value="17">5 PM</option>
+                              <option value="18">6 PM</option>
+                              <option value="19">7 PM</option>
+                              <option value="20">8 PM</option>
+                              <option value="21">9 PM</option>
+                              <option value="22">10 PM</option>
+                              <option value="23">11 PM</option>
+                            </Input>
+                            
+                            <OverlayTrigger overlay={resetTooltip} placement="left">
+                                <ButtonInput onClick={this.handleChange} type="reset" value="Reset Prescription"/>
+                            </OverlayTrigger>
+                            <OverlayTrigger overlay={submitTooltip} placement="left">
+                                <Button onClick={this.handleSubmit}>Enter Prescription</Button>
+                            </OverlayTrigger>
+                            </form>
+                          </Modal.Body>
+                          <Modal.Footer>
+                            <OverlayTrigger overlay={cancelTooltip} placement="right">
+                                <Button onClick={this.close}>Cancel Prescription</Button>
+                            </OverlayTrigger>
+                          </Modal.Footer>
+                        </Modal>
+                      </div>
+                    );
+                }
             });
 
             ReactDOM.render(

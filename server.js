@@ -250,10 +250,10 @@ router.route('/prescriptions')
     // create a prescription (accessed at POST http://localhost:8080/api/prescriptions)
     .post(function(req, res) {
         var prescription = new Prescription();      // create a new instance of the Prescription model
-        prescription.alert_assigned = req.body.alert_assigned;
         prescription.instructions = req.body.instructions;
         prescription.num_dosages = req.body.num_dosages;
         prescription.alert_assigned = req.body.alert_assigned;
+        prescription.medication_assigned = req.body.medication_assigned;
 
         // save the prescription and check for errors
         prescription.save(function(err, prescription) {
@@ -295,10 +295,10 @@ router.route('/prescriptions/:prescription_id')
                 res.send(err);
 
             // set attributes if they're defined in the PUT request
-		    prescription.alert_assigned = req.body.alert_assigned ? req.body.alert_assigned : prescription.alert_assigned;
 	        prescription.instructions = req.body.instructions ? req.body.instructions : prescription.instructions;
             prescription.num_dosages = req.body.num_dosages ? req.body.num_dosages : prescription.num_dosages;
 	        prescription.alert_assigned = req.body.alert_assigned ? req.body.alert_assigned : prescription.alert_assigned;
+            prescription.medication_assigned = req.body.medication_assigned ? req.body.medication_assigned : prescription.medication_assigned;
 
             // save the prescription
             prescription.save(function(err) {

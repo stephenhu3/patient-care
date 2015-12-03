@@ -16,9 +16,10 @@
 #include "altera_avalon_timer_regs.h"
 
 #define DEBUG 0
-#define TIMEOUT "&"
-
+#define TIMEOUT '&'
+#define MAX_CHAR_READ 63
 #define ACKNOWLEDGE "Acknowledged."
+#define LOOP_MODE 0
 
 serial * initialize_serial(alt_u32 base, const char * name,
 		int IRQ_num, int IRQ_ctrlr_ID) {
@@ -45,30 +46,57 @@ void * serial_read(void * context, alt_u32 id) {
 	if (de22pi_serial->fd >=0) // file exists
 	{
 		char temp_msg[MSG_LEN];
-		int num_read;
-		num_read = read(de22pi_serial->fd, (void *) temp_msg, MSG_LEN);
-		temp_msg[num_read++] = '\0';
-		if(num_read > 0)
-		{
-			printf("I read something.\n");
-			de22pi_serial->msg_read = 1;
-			if(strcmp(temp_msg,TIMEOUT) == 0) {
+		int num_read = read(de22pi_serial->fd, (void *) temp_msg, MAX_CHAR_READ); // empirically, max value 63
+
+		if(num_read > 0) { // we read something
+			if(DEBUG) printf("I read something.\n");
+
+			// to be replaced with a flag checker in a later iteration?
+			if(*temp_msg==TIMEOUT) { // potential issue if TIMEOUT and an alert sent within timer period?
+				// TODO: possibly start with just checking the first character
+				if(DEBUG) printf("%c received.\n", TIMEOUT);
 				de22pi_serial->timeout = 1;
+				de22pi_serial->msg_read = 0;
 			}
-			de22pi_serial->msg_index = num_read;
-			strncpy(de22pi_serial->read_message, temp_msg, num_read);
-			if(DEBUG)
-				write(de22pi_serial->fd, de22pi_serial->read_message, de22pi_serial->msg_index);
-			printf("%s\n", de22pi_serial->read_message);
-			// write(de22pi_serial->fd, ACKNOWLEDGE, strlen(ACKNOWLEDGE));
+			else // not a special flag, read until nothing left in buffer
+			{
+				de22pi_serial->msg_read = 1; // set flag
+				strcpy(de22pi_serial->read_message, ""); // clear string
+				if(LOOP_MODE)
+				{
+					if(DEBUG) printf("Loop mode.\n");
+					de22pi_serial->msg_index = 0; // reset the size of the message
+					do
+					{
+						de22pi_serial->msg_index += num_read; // adjust length of msg
+						if(DEBUG)
+						{
+							printf("Number read: %d.\n", num_read);
+							printf("Message index: %d.\n", de22pi_serial->msg_index);
+						}
+						strcat(de22pi_serial->read_message, temp_msg);
+						de22pi_serial->read_message[de22pi_serial->msg_index] = '\0';
+					}while((num_read = read(de22pi_serial->fd, (void *) temp_msg, MAX_CHAR_READ)) > 0);
+				}
+				else
+				{
+					if(DEBUG) printf("One-timer mode.\n");
+					de22pi_serial->msg_index = num_read; //
+					strcat(de22pi_serial->read_message, temp_msg); // to be removed if do block used
+					de22pi_serial->read_message[de22pi_serial->msg_index] = '\0';
+				}
+				if(DEBUG)
+				{
+					write(de22pi_serial->fd, de22pi_serial->read_message, de22pi_serial->msg_index);
+					printf("%s\n", de22pi_serial->read_message);
+				}
+			}
 		}
-		alt_irq_enable_all(cpu_sr);
-		return (void *) de22pi_serial;
 	}
 	else
 	{// things didn't work
-		printf("File descriptor less than 0.\n");
-		alt_irq_enable_all(cpu_sr);
-		return context;
+		if(DEBUG) printf("File descriptor less than 0.\n");
 	}
+	alt_irq_enable_all(cpu_sr);
+	return (void *) de22pi_serial;
 }

@@ -19,21 +19,24 @@
 #include <unistd.h>
 
 #include "assert.h"
+
+// altera includes
 #include "alt_types.h"
 #include "altera_avalon_pio_regs.h"
 #include "altera_avalon_timer_regs.h"
-#include "timer.h"
+//#include "altera_up_avalon_audio.h"
+//#include "altera_up_avalon_audio_and_video_config.h"
 #include "altera_up_avalon_character_lcd.h"
-//#include "sys/alt_alarm.h"
+#include "altera_up_avalon_video_character_buffer_with_dma.h"
+#include "altera_up_avalon_video_pixel_buffer_dma.h"
 #include "sys/alt_irq.h"
 #include "system.h"
-//#include "altera_up_avalon_audio_and_video_config.h"
-//#include "altera_up_avalon_audio.h"
-#include "altera_up_avalon_video_pixel_buffer_dma.h"
-#include "altera_up_avalon_video_character_buffer_with_dma.h"
 
-#include "PatientBoard.h"
+// project files
 #include "serial.h"
+#include "timer.h"
+#include "PatientBoard.h"
+#include "PatientVGA.h"
 
 #define DEBUG 0
 
@@ -60,17 +63,9 @@ void push_isr(void * context, alt_u32 id)
 	if(push_val & KEY_0_MASK) {
 		button_pushed=1;
 	}
-	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(KEYS_BASE, 0x0);
-	alt_irq_disable(KEYS_IRQ);
 	alt_irq_enable_all(cpu_sr);
-}
-
-int print_push_button(alt_up_character_lcd_dev* de2_lcd) {
-	alt_up_character_lcd_set_cursor_pos(de2_lcd, 0, 0);
-	alt_up_character_lcd_string(de2_lcd, "PUSH BUTTON     ");
-	alt_up_character_lcd_set_cursor_pos(de2_lcd, 0, 1);
-	alt_up_character_lcd_string(de2_lcd, "PLEASE          ");
-	return 0;
+	alt_irq_disable(KEYS_IRQ);
+	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(KEYS_BASE, 0x0);
 }
 
 void char_lcd_clear( alt_up_character_lcd_dev* de2_lcd ) {
@@ -78,26 +73,6 @@ void char_lcd_clear( alt_up_character_lcd_dev* de2_lcd ) {
 	alt_up_character_lcd_string(de2_lcd, BLANK_LINE);
 	alt_up_character_lcd_set_cursor_pos(de2_lcd, 0, 1);
 	alt_up_character_lcd_string(de2_lcd, BLANK_LINE);
-}
-
-void print_wait(alt_up_character_lcd_dev* de2_lcd) {
-	alt_up_character_lcd_set_cursor_pos(de2_lcd, 0, 0);
-	alt_up_character_lcd_string(de2_lcd, "WAIT FOR        ");
-	alt_up_character_lcd_set_cursor_pos(de2_lcd, 0, 1);
-	alt_up_character_lcd_string(de2_lcd, "NEXT REQUEST!   ");
-}
-
-void print_wait_ack(alt_up_character_lcd_dev* de2_lcd) {
-	alt_up_character_lcd_set_cursor_pos(de2_lcd, 0, 0);
-	alt_up_character_lcd_string(de2_lcd, "AWAITING        ");
-	alt_up_character_lcd_set_cursor_pos(de2_lcd, 0, 1);
-	alt_up_character_lcd_string(de2_lcd, "ACKNOWLEDGEMENT.");
-}
-
-int push_LCD_init(alt_up_character_lcd_dev* tutorial_lcd)
-{
-    alt_up_character_lcd_init(tutorial_lcd);
-    return 0;
 }
 
 void init_push_irq(void * function) {
@@ -110,17 +85,21 @@ void init_push_irq(void * function) {
 int main()
 {
 	// setup
-	alt_up_pixel_buffer_dma_dev* pixel_buffer;
 	alt_up_char_buffer_dev *char_buffer;
 	char_buffer = alt_up_char_buffer_open_dev("/dev/video_character_buffer_with_dma_0");
 	assert(char_buffer);
+
+	alt_up_pixel_buffer_dma_dev* pixel_buffer;
 	pixel_buffer = alt_up_pixel_buffer_dma_open_dev(VIDEO_PIXEL_BUFFER_DMA_0_NAME);
 	assert(pixel_buffer);
-    alt_up_character_lcd_dev* de2_lcd = alt_up_character_lcd_open_dev(CHARACTER_LCD_0_NAME);
-    assert(de2_lcd);
-    serial * de22pi_rs232 = initialize_serial(RS232_0_0_BASE, RS232_0_0_NAME,
+
+	alt_up_character_lcd_dev* de2_lcd = alt_up_character_lcd_open_dev(CHARACTER_LCD_0_NAME);
+	assert(de2_lcd);
+	alt_up_character_lcd_init(de2_lcd);
+
+	serial * de22pi_rs232 = initialize_serial(RS232_0_0_BASE, RS232_0_0_NAME,
 			RS232_0_0_IRQ, RS232_0_0_IRQ_INTERRUPT_CONTROLLER_ID);
-    assert(de22pi_rs232);
+	assert(de22pi_rs232);
 	if(de22pi_rs232 == NULL) {
 		printf("Serial initialisation for %s failed.\n", RS232_0_0_NAME);
 		printf("Exiting...\n");
@@ -131,6 +110,7 @@ int main()
 	alt_up_pixel_buffer_dma_swap_buffers(pixel_buffer);
 	while (alt_up_pixel_buffer_dma_check_swap_buffers_status(pixel_buffer));
 	alt_up_pixel_buffer_dma_clear_screen(pixel_buffer, 0);
+	alt_up_char_buffer_clear(char_buffer);
 
 	init_timer_irq(TIMER_0_BASE, TIMER_0_IRQ, serial_read, (void *) de22pi_rs232, 10);
     init_push_irq(push_isr);
@@ -146,24 +126,34 @@ int main()
 					printf("%u\n", get_snapshot(TIMER_0_BASE)); // check pointer
 				serial_write(de22pi_rs232, PUSH_MSG);
 				button_pushed=0;
+				alt_up_char_buffer_clear(char_buffer);
 				char_lcd_clear(de2_lcd);
 			}
-			if(de22pi_rs232->msg_read) {
-				if(de22pi_rs232->timeout) {
-					// clear VGA
-					char_lcd_clear(de2_lcd);
-					alt_irq_disable(KEYS_IRQ);
-					de22pi_rs232->timeout = 0;
-				}
-				else
-				{
-					// print value onto VGA
-					char_lcd_clear(de2_lcd);
-					alt_up_character_lcd_set_cursor_pos(de2_lcd, 0, 0);
-					alt_up_character_lcd_string(de2_lcd, de22pi_rs232->read_message);
-					alt_irq_enable(KEYS_IRQ);
-				}
+			if(de22pi_rs232->timeout)
+			{
+				// clear VGA
+				alt_up_char_buffer_clear(char_buffer);
+				char_lcd_clear(de2_lcd);
+				alt_irq_disable(KEYS_IRQ);
+				de22pi_rs232->timeout = 0;
+			}
+			else if(de22pi_rs232->msg_read)
+			{
+				// print value onto VGA
+				// alt_up_char_buffer_string();
+				// make sure to disable timer interrupts here
+				// update the VGA and then re-enable, just in case the
+				// value is changed while we're updating the display
+				char * message;
+				strcpy(message, de22pi_rs232->read_message);
+				alt_up_char_buffer_clear(char_buffer);
+				alt_up_char_buffer_string(char_buffer,message,0,0);
+				char_lcd_clear(de2_lcd);
+				alt_up_character_lcd_set_cursor_pos(de2_lcd, 0, 0);
+				alt_up_character_lcd_string(de2_lcd, message);
 				de22pi_rs232->msg_read = 0;
+				IOWR_ALTERA_AVALON_PIO_EDGE_CAP(KEYS_BASE, 0x0);
+				alt_irq_enable(KEYS_IRQ);
 			}
 		}
     }

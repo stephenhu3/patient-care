@@ -145,6 +145,7 @@ ELF := de22pi.elf
 C_SRCS += serial.c
 C_SRCS += PatientBoard.c
 C_SRCS += timer.c
+C_SRCS += PatientVGA.c
 CXX_SRCS :=
 ASM_SRCS :=
 

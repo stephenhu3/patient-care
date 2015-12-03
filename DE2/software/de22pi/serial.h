@@ -14,7 +14,7 @@
 #include "alt_types.h"
 
 #define TIMER_MODE 0
-#define MSG_LEN 512
+#define MSG_LEN 1024
 
 typedef struct serial {
 	// arranged alphabetical order

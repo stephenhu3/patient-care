@@ -34,6 +34,7 @@
     <body>
         <div id="content"></div>
         <script type="text/babel">
+
             var Constants = {
                 apiUrl: "https://patient-care-rest.herokuapp.com/api"
             }
@@ -103,7 +104,7 @@
                                     could be due to lack of unique key prop*/}
                                     Prescription ID: {patient.prescription_assigned}
                                 </Patient>
-                                <PrescriptionList data={patient.prescription_assigned}/>
+                                <PrescriptionList data={patient.prescription_assigned} patient_id={patient._id}/>
                             </div>
                         );
                     });
@@ -255,6 +256,7 @@
                     // 6. assign the medication to the prescription
                     // 7. assign the alert to the prescription
                     // 8. assign the prescription to the alert
+                    // 9. assigne prescription to the patient
 
                     console.log(prescription);
                     // var medicationData = {
@@ -271,78 +273,140 @@
                     //     // TODO need to get created alerts' IDs first
                     //     // alert_assigned: [String]
                     // },
-                    // var alertJSON = {
-                    //     hour: Number,
-                    //     timeout: Number,
-                    //     schedule: {
-                    //         "Monday": Boolean,
-                    //         "Tuesday": Boolean,
-                    //         "Wednesday": Boolean,
-                    //         "Thursday": Boolean,
-                    //         "Friday": Boolean,
-                    //         "Saturday": Boolean,
-                    //         "Sunday": Boolean
-                    //     },
-                    //     prescription_assigned: String
-                    // }
+                    var alertJSON = {
+                        "hour": prescription.hour,
+                        "timeout": prescription.timeout,
+                        "schedule": {
+                            "Monday": prescription.scheduleMon,
+                            "Tuesday": prescription.scheduleTues,
+                            "Wednesday": prescription.scheduleWed,
+                            "Thursday": prescription.scheduleThurs,
+                            "Friday": prescription.scheduleFri,
+                            "Saturday": prescription.scheduleSat,
+                            "Sunday": prescription.scheduleSun
+                        }
+                        // ,prescription_assigned: String
+                    };
+                    console.log(alertJSON);
+
+                    // Add indicated prescription to the patient's prescription list
+                    // var addPatientPrescription = function(patientId, prescriptionId) {
+                    //     var prescriptionJSON = {
+                    //         "prescription_assigned": prescriptionId
+                    //     };
+
+                    //     $.ajax({
+                    //         url: Constants["apiUrl"] + "/patients/" + patientId + "/add/" + prescriptionId
+                    //         dataType: 'json',
+                    //         type: 'POST',
+                    //         data: prescriptionJSON,
+                    //         success: function(data) {
+                    //             console.log("Full prescription successfully created");
+                    //         }.bind(this),
+                    //         error: function(xhr, status, err) {
+                    //             console.error(xhr, status, err.toString());
+                    //         }.bind(this)
+                    //     });
+                    // };
+
+                    var createPrescription = function(alertId, medicationId) {
+                        console.log("createPrescription's medicationId");
+                        console.log(medicationId);
+
+                        var prescriptionJSON = {
+                            "instructions": prescription.instructions,
+                            "num_dosages": prescription.num_dosages,
+                            "alert_assigned": [alertId],
+                            "medication_assigned": medicationId
+                        };
+
+                        $.ajax({
+                            url: Constants["apiUrl"] + "/prescriptions",
+                            dataType: 'json',
+                            type: 'POST',
+                            data: prescriptionJSON,
+                            success: function(data) {
+                                // this.setState({prescriptionId: data.id});
+                                var prescriptionId = data.id;
+                                $.ajax({
+                                    url: Constants["apiUrl"] + "/alerts/" + alertId,
+                                    dataType: 'json',
+                                    type: 'PUT',
+                                    data: {"prescription_assigned": prescriptionId},
+                                    success: function(data) {
+                                        // console.log("Full prescription successfully created");
+                                        console.log(this.props.patient_id);
+                                        // addPatientPrescription(this.props.patient_id, prescriptionId);
+                                    }.bind(this),
+                                    error: function(xhr, status, err) {
+                                        console.error(xhr, status, err.toString());
+                                    }.bind(this)
+                                });
+                            }.bind(this),
+                            error: function(xhr, status, err) {
+                                console.error(xhr, status, err.toString());
+                            }.bind(this)
+                        });
+                    };
+
                     // // var patients = this.state.data;
                     // // var newPatients = patients.concat([patient]);
                     // // this.setState({data: prescription});
-                    // $.ajax({
-                    //     url: this.props.apiUrl + "/alerts",
-                    //     dataType: 'json',
-                    //     type: 'POST',
-                    //     data: prescription,
-                    //     success: function(data) {
-                    //         // this.setState({data: data});
-                    //     }.bind(this),
-                    //     error: function(xhr, status, err) {
-                    //         console.error(url, status, err.toString());
-                    //     }.bind(this)
-                    // });
-
-                    // $.ajax({
-                    //     url: this.props.apiUrl + "/medications",
-                    //     dataType: 'json',
-                    //     type: 'POST',
-                    //     data: prescription,
-                    //     success: function(data) {
-                    //         // this.setState({data: data});
-                    //     }.bind(this),
-                    //     error: function(xhr, status, err) {
-                    //         console.error(url, status, err.toString());
-                    //     }.bind(this)
-                    // });
-
-                    // $.ajax({
-                    //     url: this.props.apiUrl + "/prescriptions",
-                    //     dataType: 'json',
-                    //     type: 'POST',
-                    //     data: prescription,
-                    //     success: function(data) {
-                    //         // this.setState({data: data});
-                    //     }.bind(this),
-                    //     error: function(xhr, status, err) {
-                    //         console.error(url, status, err.toString());
-                    //     }.bind(this)
-                    // });
-
-                    // $.ajax({
-                    //     url: this.props.apiUrl + "/patients",
-                    //     dataType: 'json',
-                    //     type: 'POST',
-                    //     data: prescription,
-                    //     success: function(data) {
-                    //         // this.setState({data: data});
-                    //     }.bind(this),
-                    //     error: function(xhr, status, err) {
-                    //         console.error(url, status, err.toString());
-                    //     }.bind(this)
-                    // });
+                    // TODO: break these into separate functions to avoid callback hell syntax
+                    $.ajax({
+                        url: Constants["apiUrl"] + "/alerts",
+                        dataType: 'json',
+                        type: 'POST',
+                        data: alertJSON,
+                        success: function(response) {
+                            // this.setState({alertId: response.id});
+                            var alertId = response.id
+                            // console.log(this.state.alertId);
+                            $.ajax({
+                                url: Constants["apiUrl"] + "/medications/name/" + prescription.name,
+                                dataType: 'json',
+                                type: 'GET',
+                                success: function(response) {
+                                    // this.setState({medicationId: response.id});
+                                    // TODO: create prescription
+                                    var medicationId = response._id;
+                                    console.log("medication was found, using:");
+                                    console.log(medicationId);
+                                    createPrescription(alertId, medicationId);
+                                }.bind(this),
+                                error: function(xhr, status, err) {
+                                    console.error("Medication name not found. Creating new entry.");
+                                    var medicationJSON = {
+                                        "name": prescription.name, 
+                                        "active_ingredient": prescription.active_ingredient
+                                    };
+                                    $.ajax({
+                                        url: Constants["apiUrl"] + "/medications",
+                                        dataType: 'json',
+                                        type: 'POST',
+                                        data: medicationJSON,
+                                        success: function(response) {
+                                            // TODO: create prescription
+                                            // this.setState({data: data});
+                                            var newMedicationId = response._id;
+                                            console.log("medication was not found, creating new:");
+                                            console.log(newMedicationId);
+                                            createPrescription(alertId, newMedicationId);
+                                        }.bind(this),
+                                        error: function(xhr, status, err) {
+                                            console.error(xhr, status, err.toString());
+                                        }.bind(this)
+                                    });
+                                }.bind(this)
+                            });
+                        }.bind(this),
+                        error: function(xhr, status, err) {
+                            console.error(xhr, status, err.toString());
+                        }.bind(this)
+                    });
                 },
 
                 render: function() {
-
                 var prescriptionNodes = this.props.data.map(function (prescription) {
                         return (
                             <Prescription key={prescription._id} data={prescription}>
@@ -451,7 +515,8 @@
                         scheduleThurs: this.refs.scheduleThurs.getChecked(),
                         scheduleFri: this.refs.scheduleFri.getChecked(),
                         scheduleSat: this.refs.scheduleSat.getChecked(),
-                        scheduleSun: this.refs.scheduleSun.getChecked()
+                        scheduleSun: this.refs.scheduleSun.getChecked(),
+                        timeout: this.refs.timeout.getValue()
                     });
                 },
 
@@ -468,7 +533,8 @@
                         scheduleThurs: this.state.scheduleThurs,
                         scheduleFri: this.state.scheduleFri,
                         scheduleSat: this.state.scheduleSat,
-                        scheduleSun: this.state.scheduleSun
+                        scheduleSun: this.state.scheduleSun,
+                        timeout: this.state.timeout
                     });
                     return;
                 },
@@ -545,7 +611,16 @@
                               <option value="22">10 PM</option>
                               <option value="23">11 PM</option>
                             </Input>
-                            
+                            <Input type="select" help="Select alert response grace period before it is logged as a miss" ref="timeout" onChange={this.handleChange}>
+                              <option value="15">15 minutes</option>
+                              <option value="30">30 minutes</option>
+                              <option value="45">45 minutes</option>
+                              <option value="60">1 hour</option>
+                              <option value="75">1 hour 15 minutes</option>
+                              <option value="90">1 hour 30 minutes</option>
+                              <option value="105">1 hour 45 minutes</option>
+                              <option value="120">2 hours</option>
+                            </Input>
                             <OverlayTrigger overlay={resetTooltip} placement="left">
                                 <ButtonInput onClick={this.handleChange} type="reset" value="Reset Prescription"/>
                             </OverlayTrigger>

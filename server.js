@@ -74,6 +74,11 @@ router.get('/', function(req, res) {
     res.json({ message: 'You are using Patient-Care REST API' });   
 });
 
+// used for querying with names
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 // on routes that end in /patients
 // ----------------------------------------------------
 router.route('/patients')
@@ -346,6 +351,18 @@ router.route('/medications')
             res.json(medications);
         });
     });
+
+router.route('/medications/name/:medication_name')
+
+    // get the medication with that name (accessed at GET http://localhost:8080/api/medications/name/:medication_name)
+    .get(function(req, res) {
+        var query = Medication.where({name: capitalizeFirstLetter(req.params.medication_name)});
+        query.findOne(function(err, medication) {
+            if (err)
+                res.send(err);
+            res.json(medication);
+        });
+    })
 
 router.route('/medications/:medication_id')
 

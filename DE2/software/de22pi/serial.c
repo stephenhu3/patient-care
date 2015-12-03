@@ -43,8 +43,7 @@ void * serial_read(void * context, alt_u32 id) {
 	cpu_sr = alt_irq_disable_all();
 	IOWR_ALTERA_AVALON_TIMER_STATUS(TIMER_0_BASE, 0x0);
 	serial * de22pi_serial = (serial *) context;
-	if (de22pi_serial->fd >=0) // file exists
-	{
+	if (de22pi_serial->fd >=0) { // file exists
 		char temp_msg[MSG_LEN];
 		int num_read = read(de22pi_serial->fd, (void *) temp_msg, MAX_CHAR_READ); // empirically, max value 63
 
@@ -58,19 +57,15 @@ void * serial_read(void * context, alt_u32 id) {
 				de22pi_serial->timeout = 1;
 				de22pi_serial->msg_read = 0;
 			}
-			else // not a special flag, read until nothing left in buffer
-			{
+			else { // not a special flag, read until nothing left in buffer
 				de22pi_serial->msg_read = 1; // set flag
 				strcpy(de22pi_serial->read_message, ""); // clear string
-				if(LOOP_MODE)
-				{
+				if(LOOP_MODE) {
 					if(DEBUG) printf("Loop mode.\n");
 					de22pi_serial->msg_index = 0; // reset the size of the message
-					do
-					{
+					do {
 						de22pi_serial->msg_index += num_read; // adjust length of msg
-						if(DEBUG)
-						{
+						if(DEBUG) {
 							printf("Number read: %d.\n", num_read);
 							printf("Message index: %d.\n", de22pi_serial->msg_index);
 						}
@@ -78,23 +73,20 @@ void * serial_read(void * context, alt_u32 id) {
 						de22pi_serial->read_message[de22pi_serial->msg_index] = '\0';
 					}while((num_read = read(de22pi_serial->fd, (void *) temp_msg, MAX_CHAR_READ)) > 0);
 				}
-				else
-				{
+				else {
 					if(DEBUG) printf("One-timer mode.\n");
 					de22pi_serial->msg_index = num_read; //
 					strcat(de22pi_serial->read_message, temp_msg); // to be removed if do block used
 					de22pi_serial->read_message[de22pi_serial->msg_index] = '\0';
 				}
-				if(DEBUG)
-				{
+				if(DEBUG) {
 					write(de22pi_serial->fd, de22pi_serial->read_message, de22pi_serial->msg_index);
 					printf("%s\n", de22pi_serial->read_message);
 				}
 			}
 		}
 	}
-	else
-	{// things didn't work
+	else {// things didn't work
 		if(DEBUG) printf("File descriptor less than 0.\n");
 	}
 	alt_irq_enable_all(cpu_sr);

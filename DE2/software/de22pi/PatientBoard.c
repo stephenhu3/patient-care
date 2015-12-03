@@ -82,6 +82,14 @@ void init_push_irq(void * function) {
 	alt_irq_disable(KEYS_IRQ);
 }
 
+void clear_all(alt_up_char_buffer_dev *char_buffer,
+		alt_up_pixel_buffer_dma_dev* pixel_buffer,
+		alt_up_character_lcd_dev* de2_lcd) {
+	alt_up_char_buffer_clear(char_buffer);
+	char_lcd_clear(de2_lcd);
+	alt_up_pixel_buffer_dma_clear_screen(pixel_buffer, 0);
+}
+
 int main()
 {
 	// setup
@@ -124,30 +132,23 @@ int main()
 			{
 				if(DEBUG)
 					printf("%u\n", get_snapshot(TIMER_0_BASE)); // check pointer
+				clear_all(char_buffer, pixel_buffer, de2_lcd);
 				serial_write(de22pi_rs232, PUSH_MSG);
 				button_pushed=0;
-				alt_up_char_buffer_clear(char_buffer);
-				char_lcd_clear(de2_lcd);
 			}
 			if(de22pi_rs232->timeout)
 			{
 				// clear VGA
-				alt_up_char_buffer_clear(char_buffer);
-				char_lcd_clear(de2_lcd);
 				alt_irq_disable(KEYS_IRQ);
+				clear_all(char_buffer, pixel_buffer, de2_lcd);
 				de22pi_rs232->timeout = 0;
 			}
 			else if(de22pi_rs232->msg_read)
 			{
-				// print value onto VGA
-				// alt_up_char_buffer_string();
-				// make sure to disable timer interrupts here
-				// update the VGA and then re-enable, just in case the
-				// value is changed while we're updating the display
 				char * message;
 				strcpy(message, de22pi_rs232->read_message);
 				alt_up_char_buffer_clear(char_buffer);
-				alt_up_char_buffer_string(char_buffer,message,0,0);
+				vga_print_instr(char_buffer,(volatile int *) PIXEL_DRAWER_0_BASE, message, strlen(message));
 				char_lcd_clear(de2_lcd);
 				alt_up_character_lcd_set_cursor_pos(de2_lcd, 0, 0);
 				alt_up_character_lcd_string(de2_lcd, message);

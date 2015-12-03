@@ -42,7 +42,7 @@ var mongodbUri = 'mongodb://' + DBUSER + ':' + DBPASS + '@ds051524.mongolab.com:
 var mongooseUri = uriUtil.formatMongoose(mongodbUri);
 var mongooseLocalUri = 'mongodb://localhost/node_api'; // connect to local db
 
-mongoose.connect(mongooseUri, function (error) {
+mongoose.connect(mongooseLocalUri, function (error) {
     if (error) {
         console.log('Failed to connect to server:\n' + error);
     }
@@ -90,10 +90,13 @@ router.route('/patients')
         patient.prescription_assigned = req.body.prescription_assigned;
 
         // save the patient and check for errors
-        patient.save(function(err) {
+        patient.save(function(err, patient) {
             if (err)
                 res.send(err);
-            res.json({ message: 'Patient successfully created' });
+            res.json({
+                message: 'Patient successfully created',
+                id: patient.id
+            });
         });
         
     })
@@ -169,10 +172,13 @@ router.route('/caretakers')
 	    caretaker.patient_assigned = req.body.patient_assigned;
 
         // save the caretaker and check for errors
-        caretaker.save(function(err) {
+        caretaker.save(function(err, caretaker) {
             if (err)
                 res.send(err);
-            res.json({ message: 'Caretaker successfully created' });
+            res.json({
+                message: 'Caretaker successfully created',
+                id: caretaker.id
+            });
         });
         
     })
@@ -245,10 +251,13 @@ router.route('/prescriptions')
         prescription.alert_assigned = req.body.alert_assigned;
 
         // save the prescription and check for errors
-        prescription.save(function(err) {
+        prescription.save(function(err, prescription) {
             if (err)
                 res.send(err);
-            res.json({ message: 'Prescription successfully created' });
+            res.json({
+                message: 'Prescription successfully created',
+                id: prescription.id
+            });
         });
         
     })
@@ -318,10 +327,13 @@ router.route('/medications')
 	    medication.active_ingredient = req.body.active_ingredient;
 
         // save the medication and check for errors
-        medication.save(function(err) {
+        medication.save(function(err, medication) {
             if (err)
                 res.send(err);
-            res.json({ message: 'Medication successfully created' });
+            res.json({
+                message: 'Medication successfully created',
+                id: medication.id
+            });
         });
         
     })
@@ -391,10 +403,13 @@ router.route('/alerts')
         alert.prescription_assigned = req.body.prescription_assigned;
 
         // save the alert and check for errors
-        alert.save(function(err) {
+        alert.save(function(err, alert) {
             if (err)
                 res.send(err);
-            res.json({ message: 'Alert successfully created' });
+            res.json({
+                message: 'Alert successfully created',
+                id: alert.id
+            });
         });
         
     })
@@ -466,10 +481,13 @@ router.route('/patienthistory')
         patientHistory.date = req.body.date;
 
         // save the patientHistory and check for errors
-        patientHistory.save(function(err) {
+        patientHistory.save(function(err, patienthistory) {
             if (err)
                 res.send(err);
-            res.json({ message: 'PatientHistory successfully created' });
+            res.json({
+                message: 'PatientHistory successfully created',
+                id: patienthistory.id
+            });
         });
         
     })

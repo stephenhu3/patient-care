@@ -42,7 +42,7 @@ var mongodbUri = 'mongodb://' + DBUSER + ':' + DBPASS + '@ds051524.mongolab.com:
 var mongooseUri = uriUtil.formatMongoose(mongodbUri);
 var mongooseLocalUri = 'mongodb://localhost/node_api'; // connect to local db
 
-mongoose.connect(mongooseLocalUri, function (error) {
+mongoose.connect(mongooseUri, function (error) {
     if (error) {
         console.log('Failed to connect to server:\n' + error);
     }

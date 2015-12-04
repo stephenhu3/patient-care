@@ -163,6 +163,31 @@ router.route('/patients/:patient_id')
         });
     });
 
+router.route('/patients/:patient_id/prescriptions')
+
+    // add new prescription id to patient's list of prescriptions (accessed at PUT http://localhost:8080/api/patients/:patient_id/prescriptions)
+    .put(function(req, res) {
+        // use our patient model to find the patient we want
+        Patient.findById(req.params.patient_id, function(err, patient) {
+            if (err)
+                res.send(err);
+          
+            // create a copy of the patient's prescriptions array
+            var appendedPrescription = patient.prescription_assigned.slice();
+
+            appendedPrescription.push(req.body.prescription_assigned);
+
+            patient.prescription_assigned = req.body.prescription_assigned ? appendedPrescription : patient.prescription_assigned;
+            // save the patient
+            patient.save(function(err) {
+                if (err)
+                    res.send(err);
+                res.json({ message: 'Patient successfully updated' });
+            });
+
+        });
+    })
+
 // on routes that end in /caretakers
 // ----------------------------------------------------
 router.route('/caretakers')

@@ -42,7 +42,7 @@ var mongodbUri = 'mongodb://' + DBUSER + ':' + DBPASS + '@ds051524.mongolab.com:
 var mongooseUri = uriUtil.formatMongoose(mongodbUri);
 var mongooseLocalUri = 'mongodb://localhost/node_api'; // connect to local db
 
-mongoose.connect(mongooseUri, function (error) {
+mongoose.connect(mongooseLocalUri, function (error) {
     if (error) {
         console.log('Failed to connect to server:\n' + error);
     }
@@ -542,6 +542,18 @@ router.route('/patienthistory')
             res.json(patientHistory);
         });
     });
+
+router.route('/patienthistory/patient/:patient_id')
+    // get the patienthistorys associated with the patient id (accessed at GET http://localhost:8080/api/patientHistory/patient/:patient_id)
+    .get(function(req, res) {
+        PatientHistory.find({
+            'patient_assigned': req.params.patient_id
+        }, function(err, patientHistory) {
+            if (err)
+                res.send(err);
+            res.json(patientHistory);
+        });
+    });    
 
 router.route('/patienthistory/:patienthistory_id')
 

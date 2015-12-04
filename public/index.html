@@ -283,9 +283,6 @@
                     };
 
                     var createPrescription = function(alertId, medicationId, patientId) {
-                        console.log("createPrescription's medicationId");
-                        console.log(medicationId);
-
                         var prescriptionJSON = {
                             "instructions": prescription.instructions,
                             "num_dosages": prescription.num_dosages,
@@ -306,8 +303,6 @@
                                     type: 'PUT',
                                     data: {"prescription_assigned": prescriptionId},
                                     success: function(data) {
-                                        console.log("patientId");
-                                        console.log(patientId);
                                         addPatientPrescription(patientId, prescriptionId);
                                     }.bind(this),
                                     error: function(xhr, status, err) {
@@ -335,7 +330,7 @@
                                 type: 'GET',
                                 success: function(response) {
                                     if (!response) {
-                                        console.error("Medication name not found. Creating new entry.");
+                                        console.error("Existing medication name not found. Creating new entry.");
                                         var medicationJSON = {
                                             "name": prescription.name, 
                                             "active_ingredient": prescription.active_ingredient
@@ -347,7 +342,7 @@
                                             data: medicationJSON,
                                             success: function(response) {
                                                 var newMedicationId = response.id;
-                                                console.log("Created new medication, this is the id:");
+                                                console.log("Created new medication. This is its ID:");
                                                 console.log(newMedicationId);
                                                 createPrescription(alertId, newMedicationId, this.props.patient_id);
                                             }.bind(this),
@@ -357,32 +352,10 @@
                                         });
                                     } else {
                                         var medicationId = response._id;
-                                        console.log("medication was found, using:");
-                                        console.log(medicationId);
                                         createPrescription(alertId, medicationId, this.props.patient_id);
                                     }
                                 }.bind(this),
                                 error: function(xhr, status, err) {
-                                    // console.error("Medication name not found. Creating new entry.");
-                                    // var medicationJSON = {
-                                    //     "name": prescription.name, 
-                                    //     "active_ingredient": prescription.active_ingredient
-                                    // };
-                                    // $.ajax({
-                                    //     url: Constants["apiUrl"] + "/medications",
-                                    //     dataType: 'json',
-                                    //     type: 'POST',
-                                    //     data: medicationJSON,
-                                    //     success: function(response) {
-                                    //         var newMedicationId = response._id;
-                                    //         console.log("medication was not found, creating new:");
-                                    //         console.log(newMedicationId);
-                                    //         createPrescription(alertId, newMedicationId, this.props.patient_id);
-                                    //     }.bind(this),
-                                    //     error: function(xhr, status, err) {
-                                    //         console.error(xhr, status, err.toString());
-                                    //     }.bind(this)
-                                    // });
                                     console.log("Adding prescription failed");
                                 }.bind(this)
                             });

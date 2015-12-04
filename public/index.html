@@ -64,11 +64,7 @@
                     var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
                     return { __html: rawMarkup };
                 },
-
-                medTaken: function() {
-                    return this.props.medication_taken ? "Taken" : "Not Taken";
-                },
-
+                
                 getPrescription: function() {
                     return this.props.medication_taken ? "Taken" : "Not Taken";
                 },
@@ -339,6 +335,7 @@
                     return (
                         <div className="prescriptionList">
                             <PrescriptionForm onPrescriptionSubmit={this.handlePrescriptionSubmit} />
+                            <PatientHistoryModal patient_id={this.props.patient_id}/>
                             {prescriptionNodes}
                         </div>
                     );
@@ -486,7 +483,7 @@
                           className="addPrescriptionBtn"
                           onClick={this.open}
                         >
-                        <Glyphicon glyph="plus" className="addPrescriptionGlyph"/>   Add Prescription
+                        <Glyphicon glyph="plus" className="addPrescriptionGlyph"/>&nbsp;&nbsp;Add Prescription&nbsp;&nbsp;
                         </Button>
 
                         <Modal show={this.state.showModal} onHide={this.close}>
@@ -562,9 +559,86 @@
                 }
             });
 
+            var PatientHistory = React.createClass({
+                getInitialState: function() {
+                    return {
+                        medicationName: ''
+                    };
+                },
+
+                componentDidMount: function() {
+                    var alertEndpoint = Constants["apiUrl"] + "/alerts/" + this.props.alertId;
+                    console.log(this.props.alertId);
+                    console.log(alertEndpoint);
+                    $.get(alertEndpoint, function(result) {
+                        if (this.isMounted()) {
+                            var prescriptionEndpoint = Constants["apiUrl"] + "/prescriptions/" + result.prescription_assigned;
+                            $.get(prescriptionEndpoint, function(result) {
+                                if (this.isMounted()) {
+                                    var medicationEndpoint = Constants["apiUrl"] + "/medications/" + result.medication_assigned;
+                                    $.get(medicationEndpoint, function(result) {
+                                        this.setState({
+                                            medicationName: result.name
+                                        });
+                                    }.bind(this));
+                                }
+                            }.bind(this));
+                        }
+                    }.bind(this));
+                },
+
+                medTaken: function() {
+                    return this.props.taken ? "Yes" : "No";
+                },
+
+                rawMarkup: function() {
+                    var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
+                    return { __html: rawMarkup };
+                },
+
+                render: function() {
+                    return (
+                        <div className="patientHistory">
+                                <div className="patientHistoryMed">
+                                <h4>Medication Name:</h4>
+                                    {this.state.medicationName}
+                                </div>
+                                <h4>Date:</h4>
+                                <div className="patientHistoryDate">
+                                    {this.props.date}
+                                </div>
+                                <h4>Took Medication:</h4>
+                                <div className="patientHistoryTaken">
+                                    {this.medTaken()}
+                                </div>
+                        </div>
+                    );
+                }
+            });
+
             var PatientHistoryModal = React.createClass({
-                getInitialState() {
-                    return { showModal: false };
+                getInitialState: function() {
+                    return {
+                        showModal: false,
+                        patientHistory: []
+                    };
+                },
+
+                componentDidMount: function() {
+                    var patientHistoryEndpoint = Constants["apiUrl"] + "/patienthistory/patient/" + this.props.patient_id;
+                    $.get(patientHistoryEndpoint, function(result) {
+                        if (this.isMounted()) {
+                            console.log(result);
+                            this.setState({
+                                patientHistory: result
+                            });
+                        }
+                    }.bind(this));
+                },
+
+                rawMarkup: function() {
+                    var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
+                    return { __html: rawMarkup };
                 },
 
                 close() {
@@ -575,10 +649,14 @@
                     this.setState({ showModal: true });
                 },
 
-                render() {
-                    let resetTooltip = <Tooltip>Reset all the fields of this prescription.</Tooltip>;
-                    let submitTooltip = <Tooltip>Submit this prescription for the patient.</Tooltip>;
-                    let cancelTooltip = <Tooltip>Cancel this prescription and discard all fields.</Tooltip>;
+                render: function() {
+                    var patientHistoryNodes = this.state.patientHistory.map(function (patienthistory) {
+                        return (
+                            <PatientHistory key={patienthistory._id} alertId={patienthistory.alert_assigned} date={patienthistory.date} taken={patienthistory.taken}>
+                            </PatientHistory>
+                        );
+                    });
+                    var closeTooltip = <Tooltip>Close this menu and return to homepage.</Tooltip>;
 
                     return (
                       <div>
@@ -588,19 +666,19 @@
                           className="showPatientHistoryBtn"
                           onClick={this.open}
                         >
-                        <Glyphicon glyph="plus" className="addPrescriptionGlyph"/>   Add Prescription
+                        <Glyphicon glyph="calendar" className="patientHistoryGlyph"/>&nbsp;&nbsp;View Alert History
                         </Button>
 
                         <Modal show={this.state.showModal} onHide={this.close}>
                           <Modal.Header closeButton>
-                            <Modal.Title>Add Prescription</Modal.Title>
+                            <Modal.Title>View Alert History</Modal.Title>
                           </Modal.Header>
                           <Modal.Body>
-
+                            {patientHistoryNodes}
                           </Modal.Body>
                           <Modal.Footer>
-                            <OverlayTrigger overlay={cancelTooltip} placement="right">
-                                <Button onClick={this.close}>Cancel Prescription</Button>
+                            <OverlayTrigger overlay={closeTooltip} placement="right">
+                                <Button onClick={this.close}>Close</Button>
                             </OverlayTrigger>
                           </Modal.Footer>
                         </Modal>

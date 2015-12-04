@@ -1,0 +1,11 @@
+.metadata/
+.qsys_edit
+*.bsf
+*.cmp
+*.html
+*.rpt
+/db
+/incremental_db
+/nios_system
+/output_files
+/software/de22pi/obj

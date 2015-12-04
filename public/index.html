@@ -246,33 +246,7 @@
 
             var PrescriptionList = React.createClass({
                 handlePrescriptionSubmit: function(prescription) {
-                    // prescription contains info for medication, alert, and prescription info
-                    // need to create each and assign to appropriate fields (dependencies exist)
-                    // 1. create the alert
-                    // 2. get the alert's id
-                    // 3. search by medication name, if existing, get its id
-                    // 4. if not existing, create new medication, get its id
-                    // 5. create the prescription, get its id
-                    // 6. assign the medication to the prescription
-                    // 7. assign the alert to the prescription
-                    // 8. assign the prescription to the alert
-                    // 9. assigne prescription to the patient
-
                     console.log(prescription);
-                    // var medicationData = {
-                    //     name: prescription.name
-                    //     // TODO: add active ingredient
-                    //     // , active_ingredient: String
-                    // },
-                    // var prescriptionData = {
-                    //     // need to get created medication's ID first
-                    //     // medication_assigned: String,
-                    //     instructions: prescription.instructions,
-                    //     // TODO: add num_dosages
-                    //     // num_dosages: Number,
-                    //     // TODO need to get created alerts' IDs first
-                    //     // alert_assigned: [String]
-                    // },
                     var alertJSON = {
                         "hour": prescription.hour,
                         "timeout": prescription.timeout,
@@ -285,31 +259,30 @@
                             "Saturday": prescription.scheduleSat,
                             "Sunday": prescription.scheduleSun
                         }
-                        // ,prescription_assigned: String
                     };
                     console.log(alertJSON);
 
                     // Add indicated prescription to the patient's prescription list
-                    // var addPatientPrescription = function(patientId, prescriptionId) {
-                    //     var prescriptionJSON = {
-                    //         "prescription_assigned": prescriptionId
-                    //     };
+                    var addPatientPrescription = function(patientId, prescriptionId) {
+                        var prescriptionJSON = {
+                            "prescription_assigned": prescriptionId
+                        };
 
-                    //     $.ajax({
-                    //         url: Constants["apiUrl"] + "/patients/" + patientId + "/add/" + prescriptionId
-                    //         dataType: 'json',
-                    //         type: 'POST',
-                    //         data: prescriptionJSON,
-                    //         success: function(data) {
-                    //             console.log("Full prescription successfully created");
-                    //         }.bind(this),
-                    //         error: function(xhr, status, err) {
-                    //             console.error(xhr, status, err.toString());
-                    //         }.bind(this)
-                    //     });
-                    // };
+                        $.ajax({
+                            url: Constants["apiUrl"] + "/patients/" + patientId + "/prescriptions",
+                            dataType: 'json',
+                            type: 'PUT',
+                            data: prescriptionJSON,
+                            success: function(data) {
+                                console.log("Full prescription successfully created");
+                            }.bind(this),
+                            error: function(xhr, status, err) {
+                                console.error(xhr, status, err.toString());
+                            }.bind(this)
+                        });
+                    };
 
-                    var createPrescription = function(alertId, medicationId) {
+                    var createPrescription = function(alertId, medicationId, patientId) {
                         console.log("createPrescription's medicationId");
                         console.log(medicationId);
 
@@ -326,7 +299,6 @@
                             type: 'POST',
                             data: prescriptionJSON,
                             success: function(data) {
-                                // this.setState({prescriptionId: data.id});
                                 var prescriptionId = data.id;
                                 $.ajax({
                                     url: Constants["apiUrl"] + "/alerts/" + alertId,
@@ -334,9 +306,9 @@
                                     type: 'PUT',
                                     data: {"prescription_assigned": prescriptionId},
                                     success: function(data) {
-                                        // console.log("Full prescription successfully created");
-                                        console.log(this.props.patient_id);
-                                        // addPatientPrescription(this.props.patient_id, prescriptionId);
+                                        console.log("patientId");
+                                        console.log(patientId);
+                                        addPatientPrescription(patientId, prescriptionId);
                                     }.bind(this),
                                     error: function(xhr, status, err) {
                                         console.error(xhr, status, err.toString());
@@ -349,30 +321,23 @@
                         });
                     };
 
-                    // // var patients = this.state.data;
-                    // // var newPatients = patients.concat([patient]);
-                    // // this.setState({data: prescription});
-                    // TODO: break these into separate functions to avoid callback hell syntax
+                    // TODO: Break these into separate functions to avoid callback hell syntax
                     $.ajax({
                         url: Constants["apiUrl"] + "/alerts",
                         dataType: 'json',
                         type: 'POST',
                         data: alertJSON,
                         success: function(response) {
-                            // this.setState({alertId: response.id});
                             var alertId = response.id
-                            // console.log(this.state.alertId);
                             $.ajax({
                                 url: Constants["apiUrl"] + "/medications/name/" + prescription.name,
                                 dataType: 'json',
                                 type: 'GET',
                                 success: function(response) {
-                                    // this.setState({medicationId: response.id});
-                                    // TODO: create prescription
                                     var medicationId = response._id;
                                     console.log("medication was found, using:");
                                     console.log(medicationId);
-                                    createPrescription(alertId, medicationId);
+                                    createPrescription(alertId, medicationId, this.props.patient_id);
                                 }.bind(this),
                                 error: function(xhr, status, err) {
                                     console.error("Medication name not found. Creating new entry.");
@@ -386,12 +351,10 @@
                                         type: 'POST',
                                         data: medicationJSON,
                                         success: function(response) {
-                                            // TODO: create prescription
-                                            // this.setState({data: data});
                                             var newMedicationId = response._id;
                                             console.log("medication was not found, creating new:");
                                             console.log(newMedicationId);
-                                            createPrescription(alertId, newMedicationId);
+                                            createPrescription(alertId, newMedicationId, this.props.patient_id);
                                         }.bind(this),
                                         error: function(xhr, status, err) {
                                             console.error(xhr, status, err.toString());

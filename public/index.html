@@ -334,32 +334,56 @@
                                 dataType: 'json',
                                 type: 'GET',
                                 success: function(response) {
-                                    var medicationId = response._id;
-                                    console.log("medication was found, using:");
-                                    console.log(medicationId);
-                                    createPrescription(alertId, medicationId, this.props.patient_id);
+                                    if (!response) {
+                                        console.error("Medication name not found. Creating new entry.");
+                                        var medicationJSON = {
+                                            "name": prescription.name, 
+                                            "active_ingredient": prescription.active_ingredient
+                                        };
+                                        $.ajax({
+                                            url: Constants["apiUrl"] + "/medications",
+                                            dataType: 'json',
+                                            type: 'POST',
+                                            data: medicationJSON,
+                                            success: function(response) {
+                                                var newMedicationId = response.id;
+                                                console.log("Created new medication, this is the id:");
+                                                console.log(newMedicationId);
+                                                createPrescription(alertId, newMedicationId, this.props.patient_id);
+                                            }.bind(this),
+                                            error: function(xhr, status, err) {
+                                                console.error(xhr, status, err.toString());
+                                            }.bind(this)
+                                        });
+                                    } else {
+                                        var medicationId = response._id;
+                                        console.log("medication was found, using:");
+                                        console.log(medicationId);
+                                        createPrescription(alertId, medicationId, this.props.patient_id);
+                                    }
                                 }.bind(this),
                                 error: function(xhr, status, err) {
-                                    console.error("Medication name not found. Creating new entry.");
-                                    var medicationJSON = {
-                                        "name": prescription.name, 
-                                        "active_ingredient": prescription.active_ingredient
-                                    };
-                                    $.ajax({
-                                        url: Constants["apiUrl"] + "/medications",
-                                        dataType: 'json',
-                                        type: 'POST',
-                                        data: medicationJSON,
-                                        success: function(response) {
-                                            var newMedicationId = response._id;
-                                            console.log("medication was not found, creating new:");
-                                            console.log(newMedicationId);
-                                            createPrescription(alertId, newMedicationId, this.props.patient_id);
-                                        }.bind(this),
-                                        error: function(xhr, status, err) {
-                                            console.error(xhr, status, err.toString());
-                                        }.bind(this)
-                                    });
+                                    // console.error("Medication name not found. Creating new entry.");
+                                    // var medicationJSON = {
+                                    //     "name": prescription.name, 
+                                    //     "active_ingredient": prescription.active_ingredient
+                                    // };
+                                    // $.ajax({
+                                    //     url: Constants["apiUrl"] + "/medications",
+                                    //     dataType: 'json',
+                                    //     type: 'POST',
+                                    //     data: medicationJSON,
+                                    //     success: function(response) {
+                                    //         var newMedicationId = response._id;
+                                    //         console.log("medication was not found, creating new:");
+                                    //         console.log(newMedicationId);
+                                    //         createPrescription(alertId, newMedicationId, this.props.patient_id);
+                                    //     }.bind(this),
+                                    //     error: function(xhr, status, err) {
+                                    //         console.error(xhr, status, err.toString());
+                                    //     }.bind(this)
+                                    // });
+                                    console.log("Adding prescription failed");
                                 }.bind(this)
                             });
                         }.bind(this),

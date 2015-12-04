@@ -13,6 +13,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.3/react.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.3/react-dom.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.28.1/react-bootstrap.min.js"></script>
+        <script type="text/javascript" src="http://www.datejs.com/build/date.js"></script>
         <script>
             // Import Bootstrap components used
             var Panel = ReactBootstrap.Panel;
@@ -29,6 +30,7 @@
             var Input = ReactBootstrap.Input;
             var ButtonInput = ReactBootstrap.ButtonInput;
             var Glyphicon = ReactBootstrap.Glyphicon;
+            var Table = ReactBootstrap.Table;
         </script>
     </head>
     <body>
@@ -63,10 +65,6 @@
                 rawMarkup: function() {
                     var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
                     return { __html: rawMarkup };
-                },
-                
-                getPrescription: function() {
-                    return this.props.medication_taken ? "Taken" : "Not Taken";
                 },
 
                 render: function() {
@@ -591,6 +589,10 @@
                     return this.props.taken ? "Yes" : "No";
                 },
 
+                formatDate: function(date) {
+                    return new Date(date).toString("hh:mm tt, MMM dd, yyyy");
+                },
+
                 rawMarkup: function() {
                     var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
                     return { __html: rawMarkup };
@@ -598,20 +600,14 @@
 
                 render: function() {
                     return (
-                        <div className="patientHistory">
-                                <div className="patientHistoryMed">
-                                <h4>Medication Name:</h4>
-                                    {this.state.medicationName}
-                                </div>
-                                <h4>Date:</h4>
-                                <div className="patientHistoryDate">
-                                    {this.props.date}
-                                </div>
-                                <h4>Took Medication:</h4>
-                                <div className="patientHistoryTaken">
-                                    {this.medTaken()}
-                                </div>
-                        </div>
+                        
+                        <div>
+                    <tr>
+                        <td>{this.state.medicationName}</td>
+                        <td>{this.formatDate(this.props.date)}</td>
+                        <td>{this.medTaken()}</td>
+                    </tr>
+                    </div>
                     );
                 }
             });
@@ -674,7 +670,20 @@
                             <Modal.Title>View Alert History</Modal.Title>
                           </Modal.Header>
                           <Modal.Body>
-                            {patientHistoryNodes}
+                            <div>
+                              <Table striped responsive condensed hover>
+                                <thead>
+                                  <tr>
+                                    <th>Medication Name</th>
+                                    <th>Date</th>
+                                    <th>Took Medication</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {patientHistoryNodes}
+                                </tbody>
+                              </Table>
+                            </div>
                           </Modal.Body>
                           <Modal.Footer>
                             <OverlayTrigger overlay={closeTooltip} placement="right">

@@ -28,6 +28,10 @@ h1 {
 }
 
 .activeIngredient {
+  margin-bottom: 10px; 
+}
+
+.numDosages {
   margin-bottom: 15px; 
 }
 

@@ -116,54 +116,12 @@
                 }
             });
 
-            var PatientForm = React.createClass({
-                handleSubmit: function(e) {
-                    e.preventDefault();
-                    var author = this.refs.author.value.trim();
-                    var text = this.refs.text.value.trim();
-                    if (!text || !author) {
-                        return;
-                    }
-                    this.props.onPatientSubmit({first_name: first_name, last_name: last_name, age: age});
-                    this.refs.first_name.value = '';
-                    this.refs.last_name.value = '';
-                    return;
-                },
-                render: function() {
-                    return (
-                        <form className="patientForm" onSubmit={this.handleSubmit}>
-                            <input type="text" placeholder="Patient First Name" ref="first_name" />
-                            <input type="text" placeholder="Patient Last Name" ref="last_name" />
-                            <input type="text" placeholder="Patient Age" ref="age" />
-                            <input type="submit" value="Post" />
-                        </form>
-                    );
-                }
-            });
-
             var PatientBox = React.createClass({
                 loadPatientsFromServer: function() {
                     $.ajax({
                         url: this.props.apiUrl + "/patients",
                         dataType: 'json',
                         cache: false,
-                        success: function(data) {
-                            this.setState({data: data});
-                        }.bind(this),
-                        error: function(xhr, status, err) {
-                            console.error(url, status, err.toString());
-                        }.bind(this)
-                    });
-                },
-                handlePatientSubmit: function(patient) {
-                    var patients = this.state.data;
-                    var newPatients = patients.concat([patient]);
-                    this.setState({data: newPatients});
-                    $.ajax({
-                        url: this.props.apiUrl + "/patients",
-                        dataType: 'json',
-                        type: 'POST',
-                        data: patient,
                         success: function(data) {
                             this.setState({data: data});
                         }.bind(this),
@@ -184,7 +142,6 @@
                         <div className="patientBox">
                             <h1>Patients</h1>
                             <PatientList data={this.state.data}/>
-                            <PatientForm onPatientSubmit={this.handlePatientSubmit} />
                         </div>
                     );
                 }
@@ -205,6 +162,7 @@
                         if (this.isMounted()) {
                             this.setState({
                                 instructions: result.instructions,
+                                num_dosages: result.num_dosages,
                                 alert_assigned: result.alert_assigned
                             });
                             var medicationEndpoint = Constants["apiUrl"] + "/medications/" + result.medication_assigned
@@ -230,12 +188,16 @@
                         <div class="medication">
                         <Panel bsStyle="primary" header={<h3 class="medicationHeader">Prescription: {this.state.medicationName}</h3>}>
                                 <div className="instructions">
-                                    <h4>Instructions:</h4>
+                                <h4>Instructions:</h4>
                                     {this.state.instructions}
                                 </div>
                                 <h4>Active Ingredient:</h4>
                                 <div className="activeIngredient">
                                     {this.state.active_ingredient}
+                                </div>
+                                <h4>Dosages Left:</h4>
+                                <div className="numDosages">
+                                    {this.state.num_dosages}
                                 </div>
                             <AlertList data={this.state.alert_assigned}></AlertList>
                         </Panel>
@@ -588,6 +550,53 @@
                                 <Button onClick={this.handleSubmit}>Enter Prescription</Button>
                             </OverlayTrigger>
                             </form>
+                          </Modal.Body>
+                          <Modal.Footer>
+                            <OverlayTrigger overlay={cancelTooltip} placement="right">
+                                <Button onClick={this.close}>Cancel Prescription</Button>
+                            </OverlayTrigger>
+                          </Modal.Footer>
+                        </Modal>
+                      </div>
+                    );
+                }
+            });
+
+            var PatientHistoryModal = React.createClass({
+                getInitialState() {
+                    return { showModal: false };
+                },
+
+                close() {
+                    this.setState({ showModal: false });
+                },
+
+                open() {
+                    this.setState({ showModal: true });
+                },
+
+                render() {
+                    let resetTooltip = <Tooltip>Reset all the fields of this prescription.</Tooltip>;
+                    let submitTooltip = <Tooltip>Submit this prescription for the patient.</Tooltip>;
+                    let cancelTooltip = <Tooltip>Cancel this prescription and discard all fields.</Tooltip>;
+
+                    return (
+                      <div>
+                        <Button
+                          bsStyle="primary"
+                          bsSize="medium"
+                          className="showPatientHistoryBtn"
+                          onClick={this.open}
+                        >
+                        <Glyphicon glyph="plus" className="addPrescriptionGlyph"/>   Add Prescription
+                        </Button>
+
+                        <Modal show={this.state.showModal} onHide={this.close}>
+                          <Modal.Header closeButton>
+                            <Modal.Title>Add Prescription</Modal.Title>
+                          </Modal.Header>
+                          <Modal.Body>
+
                           </Modal.Body>
                           <Modal.Footer>
                             <OverlayTrigger overlay={cancelTooltip} placement="right">

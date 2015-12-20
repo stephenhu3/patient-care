@@ -603,7 +603,9 @@ router.route('/patienthistory/:patienthistory_id')
 
 // REGISTER OUR ROUTES -------------------------------
 // all of our routes will be prefixed with /api
+app.use('/', router);
 app.use('/api', router);
+
 
 // START THE SERVER
 // =============================================================================

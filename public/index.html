@@ -94,9 +94,7 @@
                         return (
                             <div>
                                 <Patient key={patient._id} first_name={patient.first_name} last_name={patient.last_name} age={patient.age} phone={patient.phone} medication_taken={patient.medication_taken} caretaker_assigned={patient.caretaker_assigned}>
-                                    {/*TODO: strange behaviour: this needs to be removed, but if it is, causes several exceptions,
-                                    could be due to lack of unique key prop*/}
-                                    Prescription ID: {patient.prescription_assigned}
+                                &nbsp;
                                 </Patient>
                                 <PrescriptionList data={patient.prescription_assigned} patient_id={patient._id}/>
                             </div>
@@ -202,7 +200,6 @@
 
             var PrescriptionList = React.createClass({
                 handlePrescriptionSubmit: function(prescription) {
-                    console.log(prescription);
                     var alertJSON = {
                         "hour": prescription.hour,
                         "timeout": prescription.timeout,
@@ -216,7 +213,6 @@
                             "Sunday": prescription.scheduleSun
                         }
                     };
-                    console.log(alertJSON);
 
                     // Add indicated prescription to the patient's prescription list
                     var addPatientPrescription = function(patientId, prescriptionId) {
@@ -230,7 +226,6 @@
                             type: 'PUT',
                             data: prescriptionJSON,
                             success: function(data) {
-                                console.log("Full prescription successfully created");
                             }.bind(this),
                             error: function(xhr, status, err) {
                                 console.error(xhr, status, err.toString());
@@ -298,8 +293,6 @@
                                             data: medicationJSON,
                                             success: function(response) {
                                                 var newMedicationId = response.id;
-                                                console.log("Created new medication. This is its ID:");
-                                                console.log(newMedicationId);
                                                 createPrescription(alertId, newMedicationId, this.props.patient_id);
                                             }.bind(this),
                                             error: function(xhr, status, err) {
@@ -312,7 +305,6 @@
                                     }
                                 }.bind(this),
                                 error: function(xhr, status, err) {
-                                    console.log("Adding prescription failed");
                                 }.bind(this)
                             });
                         }.bind(this),
@@ -566,8 +558,6 @@
 
                 componentDidMount: function() {
                     var alertEndpoint = Constants["apiUrl"] + "/alerts/" + this.props.alertId;
-                    console.log(this.props.alertId);
-                    console.log(alertEndpoint);
                     $.get(alertEndpoint, function(result) {
                         if (this.isMounted()) {
                             var prescriptionEndpoint = Constants["apiUrl"] + "/prescriptions/" + result.prescription_assigned;
@@ -624,7 +614,6 @@
                     var patientHistoryEndpoint = Constants["apiUrl"] + "/patienthistory/patient/" + this.props.patient_id;
                     $.get(patientHistoryEndpoint, function(result) {
                         if (this.isMounted()) {
-                            console.log(result);
                             this.setState({
                                 patientHistory: result
                             });
